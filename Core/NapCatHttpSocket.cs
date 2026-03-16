@@ -1,4 +1,5 @@
-﻿using System.Net.WebSockets;
+﻿using NapCatSharp.Exceptions;
+using System.Net.WebSockets;
 using System.Text;
 namespace NapCatSharp.Core;
 
@@ -64,22 +65,4 @@ public class NapCatHttpSocket
             Message?.Invoke(this, type, message);
         }
     }
-}
-
-/// <summary>
-/// Socket未被打开错误
-/// </summary>
-/// <param name="message"></param>
-public class SocketNotOpenException(string message) : Exception
-{
-    public override string Message => message;
-}
-
-/// <summary>
-/// Socket连接失败错误
-/// </summary>
-/// <param name="message"></param>
-public class SocketConnectionException(string message) : Exception
-{
-    public override string Message => message;
 }

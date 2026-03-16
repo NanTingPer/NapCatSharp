@@ -1,8 +1,9 @@
-﻿using NapCatSharp.RequestModels.OB11MessageModels;
+﻿using NapCatSharp.RequestModels;
+using NapCatSharp.RequestModels.OB11MessageModels;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace NapCatSharp.RequestModels.JsonConverter;
+namespace NapCatSharp.JsonConverter;
 
 public class OB11MessageModelFlagConver : JsonConverter<IOB11MessageModelFlag>
 {
