@@ -1,4 +1,4 @@
-﻿using NapCatSharp.RequestModels.JsonConverter;
+﻿using NapCatSharp.JsonConverter;
 using System.Text.Json.Serialization;
 
 namespace NapCatSharp.RequestModels;

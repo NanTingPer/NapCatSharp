@@ -2,6 +2,14 @@
 
 namespace NapCatSharp.EventPushModels;
 
+/// <summary>
+/// 使用模式匹配判断类型
+/// <code>
+/// if (obj is Lifecycle lifeEvent){
+///     ...
+/// }
+/// </code>
+/// </summary>
 public abstract class EventBaseModel
 {
     [JsonPropertyName("time")]
@@ -18,7 +26,7 @@ public abstract class EventBaseModel
     [JsonIgnore]
     public bool IsMessage => EventType == PostType.message;
     [JsonIgnore]
-    public bool IsRequest => EventType == PostType.request; 
+    public bool IsRequest => EventType == PostType.request;
     [JsonIgnore]
     public bool IsMetaEvent => EventType == PostType.meta_event;
     [JsonIgnore]

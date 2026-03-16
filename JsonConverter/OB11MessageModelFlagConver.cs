@@ -22,7 +22,7 @@ public class OB11MessageModelFlagConver : JsonConverter<IOB11MessageModelFlag>
             if (OB11MessageType.messageTypeMap.TryGetValue(typeResult, out Type? msgType)) {
                 return (IOB11MessageModelFlag)JsonSerializer.Deserialize(root, msgType)!;
             }
-            return new OB11MessageModels.Text(){ Data = new OB11MessageModels.Text.OB11MessageText(){ Text = $"{typeResult}类型模型还未实现" } };
+            return new Text(){ Data = new Text.OB11MessageText(){ Text = $"{typeResult}类型模型还未实现" } };
         }
         throw new JsonException($"数据序列化为{typeof(IOB11MessageModelFlag).FullName}失败。{reader.Position}");
     }
