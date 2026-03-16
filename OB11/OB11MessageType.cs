@@ -3,7 +3,7 @@ using System.Collections.Frozen;
 using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
 
-namespace NapCatSharp.RequestModels;
+namespace NapCatSharp.OB11;
 
 public enum OB11MessageTypeEnum
 {

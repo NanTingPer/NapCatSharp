@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using NapCatSharp.OB11;
+using System.Text.Json.Serialization;
 
 namespace NapCatSharp.RequestModels.MessageInterfaces;
 

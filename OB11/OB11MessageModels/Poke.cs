@@ -1,9 +1,10 @@
-﻿using System;
+﻿using NapCatSharp.OB11;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Text.Json.Serialization;
 
-namespace NapCatSharp.RequestModels.OB11MessageModels;
+namespace NapCatSharp.OB11.OB11MessageModels;
 
 /// <summary> 戳一戳消息段 </summary>
 public class Poke : OB11MessageModelBase<Poke.OB11MessagePoke, Poke>

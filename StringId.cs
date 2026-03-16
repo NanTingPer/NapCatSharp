@@ -1,7 +1,7 @@
 ﻿using NapCatSharp.JsonConverter;
 using System.Text.Json.Serialization;
 
-namespace NapCatSharp.RequestModels;
+namespace NapCatSharp;
 
 /// <summary> 
 /// string型id 

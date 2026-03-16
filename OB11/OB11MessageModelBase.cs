@@ -1,7 +1,7 @@
 ﻿using NapCatSharp.JsonConverter;
 using System.Text.Json.Serialization;
 
-namespace NapCatSharp.RequestModels;
+namespace NapCatSharp.OB11;
 
 /// <summary>
 /// OB11消息类似抽象

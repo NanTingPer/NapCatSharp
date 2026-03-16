@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace NapCatSharp.EventPushModels.MetaEvent;
+namespace NapCatSharp.EventPushModels.MetaEvents;
 
 /// <summary>
 /// 心跳

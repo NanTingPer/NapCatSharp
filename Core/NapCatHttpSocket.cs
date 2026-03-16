@@ -1,4 +1,5 @@
 ﻿using NapCatSharp.EventPushModels;
+using NapCatSharp.EventPushModels.MessageEvents;
 using NapCatSharp.Exceptions;
 using System.Net.WebSockets;
 using System.Text;
@@ -77,6 +78,11 @@ public class NapCatHttpSocket
                 if (oEvent != null) {
                     MetaEventMessage?.Invoke(this, oEvent);
                 }
+            } else if (postType == PostType.message) {
+                var oEvent = GetMessageEvent(doc.RootElement);
+                if (oEvent != null) {
+                    MetaEventMessage?.Invoke(this, oEvent);
+                }
             }
         }
     }
@@ -109,6 +115,44 @@ public class NapCatHttpSocket
         }
         return null;
     }
+
+    public static EventBaseModel? GetMessageEvent(JsonElement rootElement)
+    {
+        if (!rootElement.TryGetProperty("message_type", out JsonElement eventType)) {
+            return null;
+        }
+
+        var eventTypeStr = eventType.GetString();
+        if (eventTypeStr == null) return null;
+
+        var type = EnumExtension<MessageType>.GetValue(eventTypeStr);
+        if (type == null) return null;
+
+        if (EnumTypeMap.MessageEventTypeMap.TryGetValue(type.Value, out var otype)) {
+            return (EventBaseModel)rootElement.Deserialize(otype)!;
+        }
+        return null;
+    }
+
+    public static EventBaseModel? GetEventData<TEnum>(JsonElement rootElement, string enumPropName)
+        where TEnum : struct, Enum
+    {
+        if (!rootElement.TryGetProperty(enumPropName, out JsonElement eventType)) {
+            return null;
+        }
+
+        var eventTypeStr = eventType.GetString();
+        if (eventTypeStr == null) return null;
+
+        var type = EnumExtension<TEnum>.GetValue(eventTypeStr);
+        if (type == null) return null;
+
+        if (EnumTypeMap.GetMap<TEnum>()!.TryGetValue(type.Value, out var otype)) {
+            return (EventBaseModel)rootElement.Deserialize(otype)!;
+        }
+        return null;
+    }
+
 
     /// <summary>
     /// 将post的string内容转为object

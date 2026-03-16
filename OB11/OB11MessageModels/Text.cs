@@ -1,7 +1,8 @@
-﻿using System.Text.Json.Serialization;
-using static NapCatSharp.RequestModels.OB11MessageModels.Text;
+﻿using NapCatSharp.OB11;
+using System.Text.Json.Serialization;
+using static NapCatSharp.OB11.OB11MessageModels.Text;
 
-namespace NapCatSharp.RequestModels.OB11MessageModels;
+namespace NapCatSharp.OB11.OB11MessageModels;
 
 public class Text : OB11MessageModelBase<OB11MessageText, Text>
 {

@@ -1,5 +1,5 @@
-﻿using NapCatSharp.RequestModels;
-using NapCatSharp.RequestModels.OB11MessageModels;
+﻿using NapCatSharp.OB11;
+using NapCatSharp.OB11.OB11MessageModels;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 

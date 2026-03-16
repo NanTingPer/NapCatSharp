@@ -1,4 +1,4 @@
-﻿using NapCatSharp.RequestModels;
+﻿using NapCatSharp.OB11;
 using System.Text.Json;
 
 namespace NapCatSharp.Utils;

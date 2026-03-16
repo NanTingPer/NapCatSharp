@@ -1,6 +1,7 @@
-﻿using NapCatSharp.RequestModels;
+﻿using NapCatSharp.OB11;
+using NapCatSharp.OB11.OB11MessageModels;
+using NapCatSharp.RequestModels;
 using NapCatSharp.RequestModels.MessageInterfaces;
-using NapCatSharp.RequestModels.OB11MessageModels;
 
 namespace NapCatSharp.Core;
 

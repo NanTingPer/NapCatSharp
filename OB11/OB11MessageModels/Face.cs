@@ -1,7 +1,8 @@
-﻿using System.Text.Json.Serialization;
-using static NapCatSharp.RequestModels.OB11MessageModels.Face;
+﻿using NapCatSharp.OB11;
+using System.Text.Json.Serialization;
+using static NapCatSharp.OB11.OB11MessageModels.Face;
 
-namespace NapCatSharp.RequestModels.OB11MessageModels;
+namespace NapCatSharp.OB11.OB11MessageModels;
 
 public class Face : OB11MessageModelBase<OB11MessageFace, Face>
 {

@@ -1,6 +1,7 @@
-﻿using System.Text.Json.Serialization;
+﻿using NapCatSharp.OB11;
+using System.Text.Json.Serialization;
 
-namespace NapCatSharp.RequestModels.OB11MessageModels;
+namespace NapCatSharp.OB11.OB11MessageModels;
 
 /// <summary> 图片消息段 </summary>
 public class Image : OB11MessageModelBase<Image.OB11MessageImage, Image>

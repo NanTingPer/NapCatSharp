@@ -1,14 +1,13 @@
-﻿using System;
+﻿using NapCatSharp.EventPushModels.MessageEvents;
 using System.Collections.Frozen;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using System.Text;
 
 namespace NapCatSharp.EventPushModels;
 
 public static class EnumTypeMap
 {
     public readonly static FrozenDictionary<MetaEventType, Type> MetaEventTypeMap;
+    public readonly static FrozenDictionary<MessageType, Type> MessageEventTypeMap;
 
     static EnumTypeMap()
     {
@@ -18,6 +17,7 @@ public static class EnumTypeMap
         );
 
         Dictionary<MetaEventType, Type> metaEventTypeMapCache = [];
+        Dictionary<MessageType, Type> messageEventTypeMapCache = [];
 
         var eventBaseModelType = eventModelTypes.Select(t => (th: t, baset: t.BaseType));
         foreach (var item in eventBaseModelType) {
@@ -25,9 +25,26 @@ public static class EnumTypeMap
                 var th = (EventBaseModelG<MetaEventType>)Activator.CreateInstance(item.th)!;
                 metaEventTypeMapCache[th.GetEnumValue()] = item.th;
             }
+
+            if (item.baset!.GetGenericArguments().Contains(typeof(MessageType))) {
+                var th = (EventBaseModelG<MessageType>)Activator.CreateInstance(item.th)!;
+                messageEventTypeMapCache[th.GetEnumValue()] = item.th;
+            }
         }
 
         MetaEventTypeMap = metaEventTypeMapCache.ToFrozenDictionary();
+        MessageEventTypeMap = messageEventTypeMapCache.ToFrozenDictionary();
+    }
+
+    public static FrozenDictionary<TEnum, Type>? GetMap<TEnum>()
+        where TEnum : struct, Enum
+    {
+        if(typeof(TEnum) == typeof(MessageType)) {
+            return (FrozenDictionary<TEnum, Type>)(object)MessageEventTypeMap;
+        } else if(typeof(TEnum) == typeof(MetaEventType)) {
+            return (FrozenDictionary<TEnum, Type>)(object)MetaEventTypeMap;
+        }
+        return null;
     }
 
 #pragma warning disable CA2255 // 不应在库中使用 “ModuleInitializer” 属性

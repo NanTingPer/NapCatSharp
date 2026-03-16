@@ -1,7 +1,7 @@
 ﻿using NapCatSharp.JsonConverter;
 using System.Text.Json.Serialization;
 
-namespace NapCatSharp.EventPushModels.MetaEvent;
+namespace NapCatSharp.EventPushModels.MetaEvents;
 
 /// <summary>
 /// 生命周期事件

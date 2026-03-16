@@ -1,6 +1,7 @@
-﻿using System.Text.Json.Serialization;
+﻿using NapCatSharp.OB11;
+using System.Text.Json.Serialization;
 
-namespace NapCatSharp.RequestModels.OB11MessageModels;
+namespace NapCatSharp.OB11.OB11MessageModels;
 
 /// <summary> 合并转发消息节点 </summary>
 public class Node : OB11MessageModelBase<Node.OB11MessageNode, Node>

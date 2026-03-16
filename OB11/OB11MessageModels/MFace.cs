@@ -1,6 +1,7 @@
-﻿using System.Text.Json.Serialization;
+﻿using NapCatSharp.OB11;
+using System.Text.Json.Serialization;
 
-namespace NapCatSharp.RequestModels.OB11MessageModels;
+namespace NapCatSharp.OB11.OB11MessageModels;
 /// <summary> 商城表情消息段 </summary>
 public class MFace : OB11MessageModelBase<MFace.OB11MessageMFace, MFace>
 {

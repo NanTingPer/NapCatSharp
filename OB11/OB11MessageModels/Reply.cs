@@ -1,6 +1,7 @@
-﻿using System.Text.Json.Serialization;
+﻿using NapCatSharp.OB11;
+using System.Text.Json.Serialization;
 
-namespace NapCatSharp.RequestModels.OB11MessageModels;
+namespace NapCatSharp.OB11.OB11MessageModels;
 /// <summary> 回复消息段 </summary>
 public class Reply : OB11MessageModelBase<Reply.OB11MessageReply, Reply>
 {
