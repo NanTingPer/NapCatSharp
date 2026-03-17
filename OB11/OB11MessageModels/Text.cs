@@ -11,4 +11,11 @@ public class Text : OB11MessageModelBase<OB11MessageText, Text>
         [JsonPropertyName("text")]
         public required string Text { get; set; }
     }
+
+    public override string ToString()
+    {
+        return Data.Text;
+    }
+
+    public static implicit operator string(Text text) => text.Data.Text;
 }

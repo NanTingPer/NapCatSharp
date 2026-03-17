@@ -13,7 +13,7 @@ public partial class NapCatHttpServer
     /// <param name="text"> 文本内容 </param>
     /// <param name="userid"> 用户id </param>
     /// <returns></returns>
-    public Task<HttpResponseMessage> SendPrivateTextMsg(string text, string userid)
+    public Task<HttpResponseMessage> SendPrivateTextMsg(string text, LongId userid)
     {
         var msg = new SendPrivateMsg()
         {
@@ -33,7 +33,7 @@ public partial class NapCatHttpServer
     }
 
     /// <summary> 发送私聊消息 </summary>
-    public Task<HttpResponseMessage> SendPrivateMsg(List<IOB11MessageModelFlag> msgs, string userId)
+    public Task<HttpResponseMessage> SendPrivateMsg(List<IOB11MessageModelFlag> msgs, LongId userId)
     {
         var msg = new SendPrivateMsg()
         {
@@ -42,7 +42,7 @@ public partial class NapCatHttpServer
         };
         return Post(msg);
     }
-    public Task<HttpResponseMessage> SendGroupMsg(List<IOB11MessageModelFlag> msgs, string groupId)
+    public Task<HttpResponseMessage> SendGroupMsg(List<IOB11MessageModelFlag> msgs, LongId groupId)
     {
         var msg = new SendMsg()
         {
