@@ -1,6 +1,6 @@
 ﻿using NapCatSharp.EventPushModels;
-using NapCatSharp.EventPushModels.MessageEvents;
 using NapCatSharp.Exceptions;
+using NapCatSharp.OB11;
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
@@ -8,6 +8,8 @@ namespace NapCatSharp.Core;
 
 public class NapCatHttpSocket
 {
+    public record class EventMessageData(NapCatHttpSocket This, EventBaseModel EventData);
+
     private ClientWebSocket socket;
     public required Uri Uri { get; set; }
     public required string? Password { get; set;}
@@ -15,7 +17,14 @@ public class NapCatHttpSocket
     /// 调用<see cref="Receive(Action{string}, CancellationToken)"/> 开始接收
     /// </summary>
     public event Action<NapCatHttpSocket, WebSocketMessageType, string>? Message = null;
-    public event Action<NapCatHttpSocket, EventBaseModel>? MetaEventMessage = null;
+    /// <summary>
+    /// 当消息为元事件时候触发
+    /// </summary>
+    public event Action<EventMessageData>? MetaMessage = null;
+    /// <summary>
+    /// 当消息为消息事件时触发
+    /// </summary>
+    public event Action<EventMessageData>? MessageEvent = null;
     public NapCatHttpSocket()
     {
         socket = new ClientWebSocket();
@@ -74,22 +83,21 @@ public class NapCatHttpSocket
             // 解析数据
             if (postType == null) continue;
             if (postType == PostType.meta_event) {
-                var oEvent = GetMeatEvent(doc.RootElement);
+                var oEvent = GetEventData<MetaEventType>(doc.RootElement, "meta_event_type");
                 if (oEvent != null) {
-                    MetaEventMessage?.Invoke(this, oEvent);
+                    MetaMessage?.Invoke(new (this, oEvent));
                 }
             } else if (postType == PostType.message) {
-                var oEvent = GetMessageEvent(doc.RootElement);
+                var oEvent = GetEventData<MessageType>(doc.RootElement, "message_type");
                 if (oEvent != null) {
-                    MetaEventMessage?.Invoke(this, oEvent);
+                    MessageEvent?.Invoke(new EventMessageData(this, oEvent));
                 }
             }
         }
     }
 
-    public static PostType? GetPostType(JsonElement rootElement)
+    private static PostType? GetPostType(JsonElement rootElement)
     {
-        //rootElement = StringKeyToObject(rootElement);
         if (rootElement.TryGetProperty("post_type", out JsonElement el)) {
             var postTypeStr = el.GetString();
             if (postTypeStr == null) return null;
@@ -98,43 +106,12 @@ public class NapCatHttpSocket
         return null;
     }
 
-    public static EventBaseModel? GetMeatEvent(JsonElement rootElement)
-    {
-        if (!rootElement.TryGetProperty("meta_event_type", out JsonElement eventType)) {
-            return null;
-        }
-
-        var eventTypeStr = eventType.GetString();
-        if (eventTypeStr == null) return null;
-
-        var type = EnumExtension<MetaEventType>.GetValue(eventTypeStr);
-        if(type == null) return null;
-
-        if (EnumTypeMap.MetaEventTypeMap.TryGetValue(type.Value, out var otype)) {
-            return (EventBaseModel)rootElement.Deserialize(otype)!;
-        }
-        return null;
-    }
-
-    public static EventBaseModel? GetMessageEvent(JsonElement rootElement)
-    {
-        if (!rootElement.TryGetProperty("message_type", out JsonElement eventType)) {
-            return null;
-        }
-
-        var eventTypeStr = eventType.GetString();
-        if (eventTypeStr == null) return null;
-
-        var type = EnumExtension<MessageType>.GetValue(eventTypeStr);
-        if (type == null) return null;
-
-        if (EnumTypeMap.MessageEventTypeMap.TryGetValue(type.Value, out var otype)) {
-            return (EventBaseModel)rootElement.Deserialize(otype)!;
-        }
-        return null;
-    }
-
-    public static EventBaseModel? GetEventData<TEnum>(JsonElement rootElement, string enumPropName)
+    /// <summary>
+    /// 根据给定的枚举类型，从<see cref="EnumTypeMap.GetMap{TEnum}"/>中获取对应的类型映射字典。
+    /// <br/> 得到类型后，将<paramref name="rootElement"/>反序列化为对应的类型
+    /// </summary>
+    /// <returns></returns>
+    private static EventBaseModel? GetEventData<TEnum>(JsonElement rootElement, string enumPropName)
         where TEnum : struct, Enum
     {
         if (!rootElement.TryGetProperty(enumPropName, out JsonElement eventType)) {
@@ -158,7 +135,7 @@ public class NapCatHttpSocket
     /// 将post的string内容转为object
     /// </summary>
     /// <returns></returns>
-    public static JsonElement StringKeyToObject(JsonElement rootElement)
+    private static JsonElement StringKeyToObject(JsonElement rootElement)
     {
         if (rootElement.ValueKind == JsonValueKind.String) {
             var reUtf8JsonReader = new Utf8JsonReader(Encoding.UTF8.GetBytes(rootElement.ToString()));

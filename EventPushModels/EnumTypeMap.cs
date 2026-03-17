@@ -1,4 +1,4 @@
-﻿using NapCatSharp.EventPushModels.MessageEvents;
+﻿using NapCatSharp.OB11;
 using System.Collections.Frozen;
 using System.Runtime.CompilerServices;
 
@@ -20,6 +20,7 @@ public static class EnumTypeMap
         Dictionary<MessageType, Type> messageEventTypeMapCache = [];
 
         var eventBaseModelType = eventModelTypes.Select(t => (th: t, baset: t.BaseType));
+
         foreach (var item in eventBaseModelType) {
             if (item.baset!.GetGenericArguments().Contains(typeof(MetaEventType))) {
                 var th = (EventBaseModelG<MetaEventType>)Activator.CreateInstance(item.th)!;

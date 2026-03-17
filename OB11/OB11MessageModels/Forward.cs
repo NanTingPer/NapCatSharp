@@ -15,6 +15,6 @@ public class Forward : OB11MessageModelBase<Forward.OB11MessageForward, Forward>
         /// <summary> 消息内容 (OB11Message[]) </summary>
         [JsonPropertyName("content")]
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
-        public List<object>? Content { get; set; }
+        public List<IOB11MessageModelFlag>? Content { get; set; }
     }
 }

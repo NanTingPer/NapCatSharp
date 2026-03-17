@@ -1,5 +1,4 @@
-﻿using NapCatSharp.JsonConverter;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
 namespace NapCatSharp.OB11;
 
@@ -45,10 +44,4 @@ public abstract class OB11MessageModelBase<TModel, This>: IOB11MessageModelFlag
         @this.Data = data;
         return @this;
     }
-}
-
-[JsonConverter(typeof(OB11MessageModelFlagConver))]
-public interface IOB11MessageModelFlag
-{
-    OB11MessageType GetMessageType();
 }

@@ -1,7 +1,7 @@
 ﻿using NapCatSharp.JsonConverter;
 using System.Text.Json.Serialization;
 
-namespace NapCatSharp.EventPushModels.MessageEvents;
+namespace NapCatSharp.OB11;
 
 [JsonConverter(typeof(MessageTypeConverter))]
 public enum MessageType

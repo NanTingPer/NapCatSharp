@@ -1,18 +1,28 @@
-﻿using NapCatSharp.OB11;
+﻿using NapCatSharp.JsonConverter;
+using NapCatSharp.OB11;
+using System;
+using System.Collections.Generic;
+using System.Text;
 using System.Text.Json.Serialization;
 
 namespace NapCatSharp.RequestModels.MessageInterfaces;
 
-public class SendPrivateMsg : RequestModelBase
+public class SendMsg : RequestModelBase
 {
     /// <summary> 消息类型 (private/group) </summary>
     [JsonPropertyName("message_type")]
-    public string MessageType { get; set; } = "private";
+    public MessageTypeEnum MessageType { get; set; }
 
+    /// <summary>
+    /// 如果是 private 那么需要设置这个
+    /// </summary>
     [JsonPropertyName("user_id")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
-    public required LongId UserId { get; set; }
+    public LongId UserId { get; set; }
 
+    /// <summary>
+    /// 如果是 group 那么需要设置这个
+    /// </summary>
     [JsonPropertyName("group_id")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public LongId GroupId { get; set; }
@@ -33,7 +43,7 @@ public class SendPrivateMsg : RequestModelBase
 
     [JsonPropertyName("news")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public object? News {get;set; }
+    public object? News { get; set; }
 
     /// <summary> 合并转发摘要 </summary>
     [JsonPropertyName("summary")]
@@ -53,6 +63,21 @@ public class SendPrivateMsg : RequestModelBase
     public long? Timeout { get; set; }
     public override string GetEndpoint()
     {
-        return "/send_private_msg";
+        return "/send_msg";
     }
+
+    [JsonConverter(typeof(MessageTypeEnumConverter))]
+    public enum MessageTypeEnum
+    {
+        /// <summary>
+        /// 私聊
+        /// </summary>
+        @private,
+        /// <summary>
+        /// 群聊
+        /// </summary>
+        group
+    }
+
+    public class MessageTypeEnumConverter : EnumJsonConverter<MessageTypeEnum>{}
 }
