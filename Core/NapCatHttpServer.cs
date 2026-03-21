@@ -6,19 +6,32 @@ public partial class NapCatHttpServer : IDisposable
 {
     private readonly HttpClient httpClient;
 
-    public required Uri Uri { get; set; }
-    public required string Password { get; set; }
+    public Uri Uri { get; set; }
+    public string Password { get; set; }
 
     private bool isDispose = false;
 
-    public NapCatHttpServer()
+    public NapCatHttpServer(Uri uri, string password, HttpClient? httpClient = null)
     {
-        httpClient = new HttpClient();
-    }
-
-    public NapCatHttpServer(HttpClient httpClient)
-    {
-        this.httpClient = httpClient;
+        Password = password;
+        Uri = uri;
+        
+        this.httpClient = httpClient ??= new HttpClient(new SocketsHttpHandler()
+        {
+            AllowAutoRedirect = true, // 可被重定向 http -> https
+            MaxAutomaticRedirections = 10, // 防止死循
+            PooledConnectionLifetime = TimeSpan.FromSeconds(5), // 5s刷新，以更新dns等信息
+            SslOptions = 
+            {
+                 AllowRenegotiation = true,
+                 AllowTlsResume = true,
+            },
+        });
+        try {
+            httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {Password}");
+        } catch {
+            httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", Password);
+        }
     }
 
     /// <summary>
@@ -27,9 +40,9 @@ public partial class NapCatHttpServer : IDisposable
     public void Dispose()
     {
         if(isDispose == false) {
-            GC.SuppressFinalize(this);
             httpClient.Dispose();
             isDispose = true;
+            GC.SuppressFinalize(this);
         }
     }
 
