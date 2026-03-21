@@ -1,5 +1,6 @@
 ﻿using NapCatSharp.OB11;
 using NapCatSharp.OB11.OB11MessageModels;
+using NapCatSharp.RequestModels;
 using NapCatSharp.RequestModels.MessageInterfaces;
 using System.Text.Json;
 
@@ -90,6 +91,38 @@ public partial class NapCatHttpServer
     /// <summary> 标记所有消息为已读 </summary>
     public Task<HttpResponseMessage> MarkAllAsRead()
         => Post(new MarkAllAsRead());
+
+    /// <summary> 发送合并转发消息 </summary>
+    public Task<HttpResponseMessage> SendForward(SendForwardMsg msg)
+        => Post(msg);
+
+    /// <summary> 发送合并转发消息到群聊 </summary>
+    public Task<HttpResponseMessage> SendForwardToGroup(LongId groupId, List<Node> message)
+    {
+        var msg = new SendForwardMsg()
+        {
+            GroupId = groupId,
+            MessageType = MessageType.group,
+            Message = message
+        };
+        return Post(msg);
+    }
+
+    /// <summary> 发送合并转发消息到私聊 </summary>
+    public Task<HttpResponseMessage> SendForwardToPrivate(LongId userId, List<Node> message)
+    {
+        var msg = new SendForwardMsg()
+        {
+            UserId = userId,
+            MessageType = MessageType.@private,
+            Message = message
+        };
+        return Post(msg);
+    }
+
+    public Task<HttpResponseMessage> Send<TRequestModel>(TRequestModel msg)
+        where TRequestModel : RequestModelBase
+        => Post(msg);
 
     /// <summary> 根据消息 ID 获取消息详细信息 </summary>
     public async Task<GetMsgResponse> GetMsgInfo(LongId msgId, Action<Exception>? errorCallback = null)

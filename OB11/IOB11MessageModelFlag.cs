@@ -19,4 +19,36 @@ namespace NapCatSharp.OB11;
 public interface IOB11MessageModelFlag
 {
     OB11MessageType GetMessageType();
+
+    public static TOB11MessageModel Create<TOB11MessageModel, TData>(TData data)
+        where TOB11MessageModel : OB11MessageModelBase<TData, TOB11MessageModel>
+        where TData : class
+    {
+        return OB11MessageModelBase<TData, TOB11MessageModel>.Create(data);
+    }
+
+    public static Text CreateText(string text)
+    {
+        return new Text(){ Data = new Text.OB11MessageText(){ Text = text } };
+    }
+
+    public static Face CreateFace(Face.OB11MessageFace face)
+    {
+        return new Face(){ Data = face };
+    }
+
+    public static Image CreateImage(Image.OB11MessageImage image)
+    {
+        return new Image(){ Data = image };
+    }
+
+    public static MFace CreateMFace(MFace.OB11MessageMFace mface)
+    {
+        return new MFace(){ Data = mface };
+    }
+
+    public static Reply CreateReply(Reply.OB11MessageReply reply)
+    {
+        return Create<Reply, Reply.OB11MessageReply>(reply);
+    }
 }

@@ -33,6 +33,19 @@ async void GetMsgInfo(NapCatHttpSocket.EventMessageData data)
 }
 ```
 
+## 发送合并转发消息
+```cs
+LongId yourQQ = "123456";
+await nchttpServer.SendForwardToPrivate(yourQQ,[
+    Node.Create(new (){
+        UserId = yourQQ, // 转发中此消息的实际发送人 可伪
+        Content = [IOB11MessageModelFlag.CreateText("你好")],
+        Nickname = "aaa" // 转发中此消息的显示昵称 可伪
+    }),
+    ...
+]);
+```
+
 ## 项目结构
 
 ```

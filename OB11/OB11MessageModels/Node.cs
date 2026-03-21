@@ -16,25 +16,15 @@ public class Node : OB11MessageModelBase<Node.OB11MessageNode, Node>
         /// <summary> 发送者QQ号 </summary>
         [JsonPropertyName("user_id")]
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
-        public StringId? UserId { get; set; }
-
-        /// <summary> 发送者QQ号(兼容go-cqhttp) </summary>
-        [JsonPropertyName("uin")]
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
-        public StringId? Uin { get; set; }
+        public required StringId UserId { get; set; }
 
         /// <summary> 发送者昵称 </summary>
         [JsonPropertyName("nickname")]
         public required string Nickname { get; set; }
 
-        /// <summary> 发送者昵称(兼容go-cqhttp) </summary>
-        [JsonPropertyName("name")]
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
-        public string? Name { get; set; }
-
         /// <summary> 消息内容 (OB11MessageMixType) </summary>
         [JsonPropertyName("content")]
-        public required object Content { get; set; }
+        public required List<IOB11MessageModelFlag> Content { get; set; }
 
         /// <summary> 消息来源 </summary>
         [JsonPropertyName("source")]

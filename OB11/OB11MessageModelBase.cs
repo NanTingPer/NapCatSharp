@@ -5,11 +5,11 @@ namespace NapCatSharp.OB11;
 /// <summary>
 /// OB11消息类似抽象
 /// </summary>
-/// <typeparam name="TModel"> Data </typeparam>
+/// <typeparam name="TData"> Data </typeparam>
 /// <typeparam name="This"></typeparam>
-public abstract class OB11MessageModelBase<TModel, This>: IOB11MessageModelFlag
-    where TModel : class
-    where This : OB11MessageModelBase<TModel, This>
+public abstract class OB11MessageModelBase<TData, This>: IOB11MessageModelFlag
+    where TData : class
+    where This : OB11MessageModelBase<TData, This>
 {
     public OB11MessageModelBase()
     {
@@ -26,7 +26,7 @@ public abstract class OB11MessageModelBase<TModel, This>: IOB11MessageModelFlag
     /// 消息数据
     /// </summary>
     [JsonPropertyName("data")]
-    public required TModel Data { get; set; }
+    public required TData Data { get; set; }
 
     public virtual OB11MessageType GetMessageType()
     {
@@ -38,7 +38,7 @@ public abstract class OB11MessageModelBase<TModel, This>: IOB11MessageModelFlag
         return default;
     }
 
-    public static This Create(TModel data)
+    public static This Create(TData data)
     {
         This @this = Activator.CreateInstance<This>();
         @this.Data = data;

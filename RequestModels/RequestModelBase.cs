@@ -81,5 +81,10 @@ public abstract class RequestModelBase
         return new StringContent(ToJson(options), System.Text.Encoding.UTF8, "application/json");
     }
 
+    public override string ToString()
+    {
+        return ToJson();
+    }
+
     public abstract string GetEndpoint();
 }
