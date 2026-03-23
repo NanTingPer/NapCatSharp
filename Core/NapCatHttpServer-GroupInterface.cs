@@ -56,6 +56,7 @@ public partial class NapCatHttpServer
 
     /// <summary>
     /// 处理加群请求
+    /// <br/> 使用 <see cref="GetGroupSystemMsg(RequestModels.SystemInterfaces.GetGroupSystemMsg)"/>获取请求Id
     /// </summary>
     /// <param name="msg"> 请求参数 </param>
     /// <returns></returns>

@@ -12,7 +12,7 @@ public class SetGroupAddRequest : RequestModelBase
 
     /// <summary>是否同意</summary>
     [JsonPropertyName("approve")]
-    public bool? Approve { get; set; }
+    public required bool Approve { get; set; }
 
     /// <summary>拒绝理由</summary>
     [JsonPropertyName("reason")]
