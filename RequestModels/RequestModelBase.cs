@@ -1,5 +1,4 @@
-﻿using NapCatSharp.JsonConverter;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using System.Text.Json;
 
 namespace NapCatSharp.RequestModels;
@@ -30,15 +29,6 @@ public abstract class RequestModelBase
         }
     }
 
-    static RequestModelBase()
-    {
-        options = new JsonSerializerOptions();
-        options.Converters.Add(new LongIdConverter());
-        options.Converters.Add(new StringIdConverter());
-        options.Converters.Add(new OB11MessageTypeConver());
-        options.Converters.Add(new OB11MessageModelFlagConver());
-    }
-
     /// <summary>
     /// 标准化终结点，如果其有 '/' 开头则原样返回，否则添加。
     /// </summary>
@@ -51,21 +41,8 @@ public abstract class RequestModelBase
 
     public static readonly Dictionary<Type, string> EndpointMap = [];
 
-    private static readonly JsonSerializerOptions options;
-
-    /// <summary>
-    /// <code>
-    /// options.Converters.Add(new <see cref="LongIdConverter"/>());
-    /// options.Converters.Add(new <see cref="StringIdConverter"/>());
-    /// options.Converters.Add(new <see cref="OB11MessageTypeConver"/>());
-    /// options.Converters.Add(new <see cref="OB11MessageModelFlagConver"/>());
-    /// </code>
-    /// </summary>
-    /// <param name="options"> default <see cref="options"/> </param>
-    /// <returns></returns>
     public virtual string ToJson(JsonSerializerOptions? options = null)
     {
-        options ??= RequestModelBase.options;
         return JsonSerializer.Serialize(this, GetType(), options);
     }
 
@@ -77,7 +54,6 @@ public abstract class RequestModelBase
     /// <returns></returns>
     public virtual StringContent ToJsonStringContent(JsonSerializerOptions? options = null)
     {
-        options ??= RequestModelBase.options;
         return new StringContent(ToJson(options), System.Text.Encoding.UTF8, "application/json");
     }
 
