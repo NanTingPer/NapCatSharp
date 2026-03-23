@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace NapCatSharp.RequestModels.MessageInterfaces;
+﻿namespace NapCatSharp.RequestModels.MessageInterfaces;
 
 public class MarkAllAsRead : RequestModelBase
 {

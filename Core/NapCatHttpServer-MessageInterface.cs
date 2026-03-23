@@ -14,7 +14,7 @@ public partial class NapCatHttpServer
     /// <param name="text"> 文本内容 </param>
     /// <param name="userid"> 用户id </param>
     /// <returns></returns>
-    public Task<HttpResponseMessage> SendPrivateTextMsg(string text, LongId userid)
+    public Task<SendMsgResponse?> SendPrivateTextMsg(string text, LongId userid)
     {
         var msg = new SendPrivateMsg()
         {
@@ -30,20 +30,20 @@ public partial class NapCatHttpServer
             ],
         };
 
-        return Post(msg);
+        return Post<SendMsgResponse>(msg);
     }
 
     /// <summary> 发送私聊消息 </summary>
-    public Task<HttpResponseMessage> SendPrivateMsg(List<IOB11MessageModelFlag> msgs, LongId userId)
+    public Task<SendMsgResponse?> SendPrivateMsg(List<IOB11MessageModelFlag> msgs, LongId userId)
     {
         var msg = new SendPrivateMsg()
         {
             UserId = userId,
             Message = msgs
         };
-        return Post(msg);
+        return Post<SendMsgResponse>(msg);
     }
-    public Task<HttpResponseMessage> SendGroupMsg(List<IOB11MessageModelFlag> msgs, LongId groupId)
+    public Task<SendMsgResponse?> SendGroupMsg(List<IOB11MessageModelFlag> msgs, LongId groupId)
     {
         var msg = new SendMsg()
         {
@@ -51,53 +51,53 @@ public partial class NapCatHttpServer
             Message = msgs,
             GroupId = groupId,
         };
-        return Post(msg);
+        return Post<SendMsgResponse>(msg);
     }
 
     /// <summary> 根据<see cref="SendMsg.MessageType"/>确定是群聊消息还是私聊消息 </summary>
-    public Task<HttpResponseMessage> SendMsg(SendMsg msg)
-        => Post(msg);
+    public Task<SendMsgResponse?> SendMsg(SendMsg msg)
+        => Post<SendMsgResponse>(msg);
 
     /// <summary>
     /// 标记私聊消息为已读
     /// </summary>
     /// <returns></returns>
-    public Task<HttpResponseMessage> MarkPrivateMsgAsRead(MarkPrivateMsgAsRead markRead)
-        => Post(markRead);
+    public Task<SimpleResponseModel?> MarkPrivateMsgAsRead(MarkPrivateMsgAsRead markRead)
+        => Post<SimpleResponseModel>(markRead);
 
     /// <summary>
     /// 标记群消息为已读
     /// </summary>
     /// <returns></returns>
-    public Task<HttpResponseMessage> MarkGroupMsgAsRead(MarkGroupMsgAsRead markRead)
-        => Post(markRead);
+    public Task<SimpleResponseModel?> MarkGroupMsgAsRead(MarkGroupMsgAsRead markRead)
+        => Post<SimpleResponseModel>(markRead);
 
     /// <summary> 撤回消息 </summary>
-    public Task<HttpResponseMessage> DeleteMsg(LongId msgId)
-        => Post(new DeleteMsg(){ MessageId = msgId });
+    public Task<SimpleResponseModel?> DeleteMsg(LongId msgId)
+        => Post<SimpleResponseModel>(new DeleteMsg(){ MessageId = msgId });
 
     /// <summary> 撤回消息 </summary>
-    public Task<HttpResponseMessage> DeleteMsg(DeleteMsg msg) 
-        => Post(msg);
+    public Task<SimpleResponseModel?> DeleteMsg(DeleteMsg msg) 
+        => Post<SimpleResponseModel>(msg);
 
     /// <summary> 转发单条消息到私聊 </summary>
-    public Task<HttpResponseMessage> ForwardFriendSingleMsg(ForwardFriendSingleMsg msg)
-        => Post(msg);
+    public Task<SimpleResponseModel?> ForwardFriendSingleMsg(ForwardFriendSingleMsg msg)
+        => Post<SimpleResponseModel>(msg);
 
     /// <summary> 转发单条消息到群聊 </summary>
-    public Task<HttpResponseMessage> ForwardGroupSingleMsg(ForwardGroupSingleMsg msg)
-        => Post(msg);
+    public Task<SimpleResponseModel?> ForwardGroupSingleMsg(ForwardGroupSingleMsg msg)
+        => Post<SimpleResponseModel>(msg);
 
     /// <summary> 标记所有消息为已读 </summary>
-    public Task<HttpResponseMessage> MarkAllAsRead()
-        => Post(new MarkAllAsRead());
+    public Task<SimpleResponseModel?> MarkAllAsRead()
+        => Post<SimpleResponseModel>(new MarkAllAsRead());
 
     /// <summary> 发送合并转发消息 </summary>
-    public Task<HttpResponseMessage> SendForward(SendForwardMsg msg)
-        => Post(msg);
+    public Task<SimpleResponseModel?> SendForward(SendForwardMsg msg)
+        => Post<SimpleResponseModel>(msg);
 
     /// <summary> 发送合并转发消息到群聊 </summary>
-    public Task<HttpResponseMessage> SendForwardToGroup(LongId groupId, List<Node> message)
+    public Task<SimpleResponseModel?> SendForwardToGroup(LongId groupId, List<Node> message)
     {
         var msg = new SendForwardMsg()
         {
@@ -105,11 +105,11 @@ public partial class NapCatHttpServer
             MessageType = MessageType.group,
             Message = message
         };
-        return Post(msg);
+        return Post<SimpleResponseModel>(msg);
     }
 
     /// <summary> 发送合并转发消息到私聊 </summary>
-    public Task<HttpResponseMessage> SendForwardToPrivate(LongId userId, List<Node> message)
+    public Task<SimpleResponseModel?> SendForwardToPrivate(LongId userId, List<Node> message)
     {
         var msg = new SendForwardMsg()
         {
@@ -117,7 +117,7 @@ public partial class NapCatHttpServer
             MessageType = MessageType.@private,
             Message = message
         };
-        return Post(msg);
+        return Post<SimpleResponseModel>(msg);
     }
 
     public Task<HttpResponseMessage> Send<TRequestModel>(TRequestModel msg)

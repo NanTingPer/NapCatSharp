@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace NapCatSharp.RequestModels.MessageInterfaces;
 
-public class GetMsgResponse : RequestModelResponseBase<GetMsgResponse.DataInfo>
+public class GetMsgResponse : ResponseBaseModel<GetMsgResponse.DataInfo>
 {
     public class DataInfo
     {

@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace NapCatSharp.RequestModels;
 
-public abstract class RequestModelResponseBase<TData>
+public abstract class ResponseBaseModel<TData>
     where TData : class
 {
     [JsonPropertyName("status")]
@@ -38,3 +38,26 @@ public enum StatusEnum
 }
 
 public class StatusEnumConverter : EnumJsonConverter<StatusEnum>{}
+
+public class SimpleResponseModel
+{
+    [JsonPropertyName("status")]
+    public StatusEnum Status { get; set; }
+
+    [JsonPropertyName("retcode")]
+    public long Retcode { get; set; }
+
+    [JsonPropertyName("message")]
+    public string Message { get; set; } = string.Empty;
+
+    /// <summary> 提示 </summary>
+    [JsonPropertyName("wording")]
+    public string Wording { get; set; } = string.Empty;
+
+    /// <summary>
+    /// stream-action<br/>
+    /// normal-action
+    /// </summary>
+    [JsonPropertyName("stream")]
+    public string Stream { get; set; } = "normal-action";
+}

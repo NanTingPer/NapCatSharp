@@ -1,4 +1,5 @@
 ﻿using NapCatSharp.RequestModels;
+using System.Text.Json;
 
 namespace NapCatSharp.Core;
 
@@ -58,4 +59,13 @@ public partial class NapCatHttpServer : IDisposable
 
     private Task<HttpResponseMessage> Post(RequestModelBase model) 
         => httpClient.PostAsync(GetAPIEndpoint(model), model.ToJsonStringContent());
+
+    private async Task<TResponse?> Post<TResponse>(RequestModelBase model)
+        where TResponse : class
+    {
+        var response = await httpClient.PostAsync(GetAPIEndpoint(model), model.ToJsonStringContent());
+        var responseResult = await response.Content.ReadAsStringAsync();
+        if (responseResult == null) return null;
+        return JsonSerializer.Deserialize<TResponse>(responseResult);
+    }
 }
