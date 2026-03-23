@@ -1,4 +1,4 @@
-﻿using NapCatSharp.EventPushModels;
+﻿using NapCatSharp.EventPushModels.Enums;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 

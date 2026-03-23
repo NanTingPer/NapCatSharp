@@ -57,6 +57,7 @@ public partial class NapCatHttpServer
     /// <summary>
     /// 处理加群请求
     /// <br/> 使用 <see cref="GetGroupSystemMsg(RequestModels.SystemInterfaces.GetGroupSystemMsg)"/>获取请求Id
+    /// <br/> 在接受到<see cref="NapCatHttpSocket.RequestEvent"/>时，会传递<see cref="NapCatSharp.EventPushModels.RequestEvents.AddFriend"/> or <see cref="EventPushModels.RequestEvents.AddGroup"/> 其中包含 flag
     /// </summary>
     /// <param name="msg"> 请求参数 </param>
     /// <returns></returns>

@@ -1,4 +1,5 @@
 ﻿using NapCatSharp.EventPushModels;
+using NapCatSharp.EventPushModels.Enums;
 using NapCatSharp.Exceptions;
 using NapCatSharp.OB11;
 using System.Net.WebSockets;
@@ -25,6 +26,10 @@ public class NapCatHttpSocket
     /// 当消息为消息事件时触发
     /// </summary>
     public event Action<EventMessageData>? MessageEvent = null;
+    /// <summary>
+    /// 当消息为请求事件时触发
+    /// </summary>
+    public event Action<EventMessageData>? RequestEvent = null;
     public NapCatHttpSocket()
     {
         socket = new ClientWebSocket();
@@ -91,6 +96,11 @@ public class NapCatHttpSocket
                 var oEvent = GetEventData<MessageType>(doc.RootElement, "message_type");
                 if (oEvent != null) {
                     MessageEvent?.Invoke(new EventMessageData(this, oEvent));
+                }
+            } else if (postType == PostType.request) {
+                var oEvent = GetEventData<RequestType>(doc.RootElement, "request_type");
+                if (oEvent != null) {
+                    RequestEvent?.Invoke(new EventMessageData(this, oEvent));
                 }
             }
         }
