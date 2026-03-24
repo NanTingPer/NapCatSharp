@@ -1,14 +1,16 @@
+﻿using NapCatSharp.Mod.Extensions;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
-
+builder.Services.AddControllers();
 // Add services to the container.
 builder.Services.AddControllersWithViews();
-
+builder.Services.AddModSwaggerGen();
 var app = builder.Build();
 
 app.MapDefaultEndpoints();
-
+app.UseModSwagger();
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
@@ -18,10 +20,9 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseRouting();
-
 app.UseAuthorization();
-
+app.MapControllers();
+app.UseRouting();
 app.MapStaticAssets();
 
 app.MapControllerRoute(

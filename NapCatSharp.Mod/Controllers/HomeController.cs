@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using NapCatSharp.Mod.Models;
 
@@ -20,5 +20,20 @@ public class HomeController : Controller
     public IActionResult Error()
     {
         return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+    }
+}
+
+[ApiController]
+[Route("api")]
+public class ApiController : ControllerBase
+{
+    /// <summary>
+    /// 返回Ok 用于测试swagger
+    /// </summary>
+    /// <returns></returns>
+    [HttpPost("retOk")]
+    public IActionResult OKEd()
+    {
+        return Ok();
     }
 }
