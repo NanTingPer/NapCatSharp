@@ -1,7 +1,10 @@
 bin/*
 .vs/*
 obj/*
-**/bin
-**/obj
-**/Properties
+**/**/bin
+**/**/obj
+**/**/Properties
+**/**/.vs
+**/document/*
+**/wwwroot/lib
 BossIntroScreensFont.xnb

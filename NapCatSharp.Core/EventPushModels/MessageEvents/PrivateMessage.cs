@@ -7,7 +7,7 @@ namespace NapCatSharp.EventPushModels.MessageEvents;
 /// <summary>
 /// <see href="https://github.com/botuniverse/onebot-11/blob/d4456ee706f9ada9c2dfde56a2bcfc69752600e4/event/message.md"/>
 /// </summary>
-public class PrivateMessageEvent : EventBaseModelG<MessageType>
+public class PrivateMessage : EventBaseModelG<MessageType>
 {
     //message_type
     /// <summary>

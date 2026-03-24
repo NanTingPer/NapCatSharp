@@ -3,14 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
 VisualStudioVersion = 18.3.11527.330
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NapCatSharp", "NapCatSharp.csproj", "{7F294A37-9F37-228C-614F-252F976A7EE0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NapCatSharp", "NapCatSharp.Core\NapCatSharp.csproj", "{690FA8A2-C3A9-68DF-0C63-3F0DC96ED4CE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NapCatSharpTest", "..\NapCatSharpTest\NapCatSharpTest.csproj", "{17DB5F32-4AB9-33D8-71D4-53758237A3D6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NapCatSharp.Mod", "NapCatSharp.Mod\NapCatSharp.Mod.csproj", "{804A3591-EE8E-C27A-EBF2-BA598AC99788}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8B7DAD81-7D5A-4889-A5A4-B5D596FE6894}"
-	ProjectSection(SolutionItems) = preProject
-		.editorconfig = .editorconfig
-	EndProjectSection
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NapCatSharp.AppHost", "NapCatSharp.AppHost\NapCatSharp.AppHost.csproj", "{25A40907-A290-4480-BC89-407E3B620A23}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NapCatSharp.ServiceDefaults", "NapCatSharp.ServiceDefaults\NapCatSharp.ServiceDefaults.csproj", "{F194CEA4-9B56-96C8-D4BA-9ADC1EC1A632}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -18,19 +17,27 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{7F294A37-9F37-228C-614F-252F976A7EE0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7F294A37-9F37-228C-614F-252F976A7EE0}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7F294A37-9F37-228C-614F-252F976A7EE0}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7F294A37-9F37-228C-614F-252F976A7EE0}.Release|Any CPU.Build.0 = Release|Any CPU
-		{17DB5F32-4AB9-33D8-71D4-53758237A3D6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{17DB5F32-4AB9-33D8-71D4-53758237A3D6}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{17DB5F32-4AB9-33D8-71D4-53758237A3D6}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{17DB5F32-4AB9-33D8-71D4-53758237A3D6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{690FA8A2-C3A9-68DF-0C63-3F0DC96ED4CE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{690FA8A2-C3A9-68DF-0C63-3F0DC96ED4CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{690FA8A2-C3A9-68DF-0C63-3F0DC96ED4CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{690FA8A2-C3A9-68DF-0C63-3F0DC96ED4CE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{804A3591-EE8E-C27A-EBF2-BA598AC99788}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{804A3591-EE8E-C27A-EBF2-BA598AC99788}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{804A3591-EE8E-C27A-EBF2-BA598AC99788}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{804A3591-EE8E-C27A-EBF2-BA598AC99788}.Release|Any CPU.Build.0 = Release|Any CPU
+		{25A40907-A290-4480-BC89-407E3B620A23}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{25A40907-A290-4480-BC89-407E3B620A23}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{25A40907-A290-4480-BC89-407E3B620A23}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{25A40907-A290-4480-BC89-407E3B620A23}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F194CEA4-9B56-96C8-D4BA-9ADC1EC1A632}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F194CEA4-9B56-96C8-D4BA-9ADC1EC1A632}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F194CEA4-9B56-96C8-D4BA-9ADC1EC1A632}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F194CEA4-9B56-96C8-D4BA-9ADC1EC1A632}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {28139D69-92ED-44C4-80C0-39E700BCB9C7}
+		SolutionGuid = {6E99501A-C65B-426B-B6D1-8AB1B1D57BDF}
 	EndGlobalSection
 EndGlobal

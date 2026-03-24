@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace NapCatSharp.EventPushModels.MessageEvents;
 
-public class GroupMessageEvent : EventBaseModelG<MessageType>
+public class GroupMessage : EventBaseModelG<MessageType>
 {
     [JsonPropertyName("message_type")]
     public MessageType MessageType { get; set; }
