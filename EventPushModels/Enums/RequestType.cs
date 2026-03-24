@@ -9,8 +9,12 @@ namespace NapCatSharp.EventPushModels.Enums;
 [JsonConverter(typeof(RequestTypeConverter))]
 public enum RequestType
 {
+    /// <summary> 私聊 </summary>
     friend,
+    /// <summary> 群聊 </summary>
     group
 }
 
+/// <summary>
+/// </summary>
 public class RequestTypeConverter : EnumJsonConverter<RequestType>{}

@@ -52,7 +52,7 @@ public class GroupMessageEvent : EventBaseModelG<MessageType>
     /// 发送人信息
     /// </summary>
     [JsonPropertyName("sender")]
-    public object? Sender { get; set; }
+    public GroupSender? Sender { get; set; }
 
     public override MessageType GetEnumValue()
     {

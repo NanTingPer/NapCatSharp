@@ -12,6 +12,29 @@ using System.Text;
 using System.Text.Json;
 namespace NapCatSharp.Core;
 
+// 添加枚举需要做哪些事情?
+// 如果是添加Post类型
+// 1. 在PostType枚举中添加枚举
+// 2. 创建此类型对应的SubType, 比如Post.message的SubType是MessageType
+// 3. 创建各个SubType值对应的实体类型，继承EventBaseModelG
+// 3. 在EnumTypeMap中添加对应SubType的FrozenDictionary
+// 4
+
+/// <summary>
+/// 添加枚举需要做哪些事情?                                                                                                 <br/>
+/// 如果是添加Post类型                                                                                                      <br/>
+/// 1. 在<see cref="PostType"/>枚举中添加枚举                                                                               <br/>
+/// 2. 创建此类型对应的SubType, 比如<see cref="PostType.message_sent"/>的SubType是<see cref="MessageSentType"/>             <br/>
+/// 3. 创建各个SubType值对应的实体类型，继承EventBaseModelG，泛型类型就是SubType的枚举类型                                  <br/>
+/// 4. 在<see cref="EnumTypeMap"/> 中添加对应SubType的 <see cref="FrozenDictionary"/>，并注册类型                           <br/>
+/// 5. 在<see cref="EnumTypeMap.PostTypeToSubTypeMap"/>中添加<see cref="PostType"/>枚举值对应的SubType枚举类型              <br/>
+/// 6. 在<see cref="EnumTypeMap"/> 的静态构造中，初始化FrozenDictionary                                                     <br/>
+/// 7. 在<see cref="EnumTypeMap.GetMap{TEnum}"/>中，返回FrozenDictionary                                                    <br/>
+/// 8. 在<see cref="NapCatHttpSocket"/>中注册事件                                                                           <br/>
+/// 9. 在<see cref="NapCatHttpSocket"/>的构造函数中，绑定SubType对应的事件触发器                                            <br/>
+/// </summary>
+internal class Note{}
+
 public class NapCatHttpSocket
 {
     public record class EventMessageData(NapCatHttpSocket This, EventBaseModel EventData);
@@ -20,19 +43,20 @@ public class NapCatHttpSocket
     public required Uri Uri { get; set; }
     public required string? Password { get; set;}
     /// <summary>
-    /// 调用<see cref="Receive(Action{string}, CancellationToken)"/> 开始接收
+    /// 调用<see cref="Receive(CancellationToken)"/> 开始接收
     /// </summary>
     public event Action<NapCatHttpSocket, WebSocketMessageType, string>? Message = null;
 
     private delegate EventBaseModel? GetDataDelegate(JsonElement rootElement, string propName, out Enum? enumValue);
     #region static ctor
-    private readonly static List<Type> enumTypes = [typeof(MessageType), typeof(MetaType), typeof(RequestType)];
+    private readonly static List<Type> enumTypes = [typeof(MessageType), typeof(MetaType), typeof(RequestType), typeof(MessageSentType)];
     private readonly static FrozenDictionary<Type, GetDataDelegate> subTypeGetData;
     private readonly static FrozenDictionary<Type, string> typeToPropName = new Dictionary<Type, string>()
     {
         { typeof(MessageType), "message_type" },
         { typeof(RequestType), "request_type" },
         { typeof(MetaType), "meta_event_type" },
+        { typeof(MessageSentType), "message_sent_type" }
     }.ToFrozenDictionary();
 
     static NapCatHttpSocket()
@@ -98,6 +122,16 @@ public class NapCatHttpSocket
     private List<Action<EventMessageData>> requestGroup = [];
     #endregion
 
+    #region MessageSentEvent
+    public event Action<EventMessageData>? MessageSentSelf
+    {
+        remove => messageSentSelf -= value;
+        add => messageSentSelf += value;
+    }
+    private List<Action<EventMessageData>> messageSentSelf = [];
+    #endregion
+
+    #region ctor
     public NapCatHttpSocket()
     {
         socket = new ClientWebSocket();
@@ -125,10 +159,17 @@ public class NapCatHttpSocket
                     { MessageType.@private, messagePrivate },
                     { MessageType.group, messageGroup }
                 }
+            },
+            {
+                typeof(MessageSentType), new ()
+                {
+                    { MessageSentType.self, messageSentSelf }
+                }
             }
         };
         #endregion
     }
+    #endregion
 
     /// <summary>
     /// 使用给定的Uri进行连接

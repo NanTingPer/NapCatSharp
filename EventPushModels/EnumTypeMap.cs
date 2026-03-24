@@ -14,12 +14,14 @@ public static class EnumTypeMap
     public readonly static FrozenDictionary<MetaType, Type> MetaEventTypeMap;
     public readonly static FrozenDictionary<MessageType, Type> MessageEventTypeMap;
     public readonly static FrozenDictionary<RequestType, Type> RequestEventTypeMap;
+    public readonly static FrozenDictionary<MessageSentType, Type> MessageSentTypeMap;
     /// <summary> <see cref="PostType"/> 到其子类型的映射 </summary>
     public readonly static FrozenDictionary<PostType, Type> PostTypeToSubTypeMap = new Dictionary<PostType, Type>()
     {
         { PostType.message, typeof(MessageType) },
         { PostType.meta_event, typeof(MetaType) },
-        { PostType.request, typeof(RequestType) }
+        { PostType.request, typeof(RequestType) },
+        { PostType.message_sent, typeof(MessageSentType) }
     }.ToFrozenDictionary();
 
     static EnumTypeMap()
@@ -32,6 +34,7 @@ public static class EnumTypeMap
         Dictionary<MetaType, Type> metaEventTypeMapCache = [];
         Dictionary<MessageType, Type> messageEventTypeMapCache = [];
         Dictionary<RequestType, Type> requestEventTypeMapCache = [];
+        Dictionary<MessageSentType, Type> messageSentTypeMapCache = [];
 
         var eventBaseModelType = eventModelTypes.Select(t => (th: t, baset: t.BaseType));
 
@@ -50,11 +53,17 @@ public static class EnumTypeMap
                 var th = (EventBaseModelG<RequestType>)Activator.CreateInstance(item.th)!;
                 requestEventTypeMapCache[th.GetEnumValue()] = item.th;
             }
+
+            if (item.baset!.GetGenericArguments().Contains(typeof(MessageSentType))) {
+                var th = (EventBaseModelG<MessageSentType>)Activator.CreateInstance(item.th)!;
+                messageSentTypeMapCache[th.GetEnumValue()] = item.th;
+            }
         }
 
         MetaEventTypeMap = metaEventTypeMapCache.ToFrozenDictionary();
         MessageEventTypeMap = messageEventTypeMapCache.ToFrozenDictionary();
         RequestEventTypeMap = requestEventTypeMapCache.ToFrozenDictionary();
+        MessageSentTypeMap = messageSentTypeMapCache.ToFrozenDictionary();
     }
 
     public static FrozenDictionary<TEnum, Type>? GetMap<TEnum>()
@@ -66,6 +75,8 @@ public static class EnumTypeMap
             return (FrozenDictionary<TEnum, Type>)(object)MetaEventTypeMap;
         } else if(typeof(TEnum) == typeof(RequestType)) {
             return (FrozenDictionary<TEnum, Type>)(object)RequestEventTypeMap;
+        } else if(typeof(TEnum) == typeof(MessageSentType)) {
+            return (FrozenDictionary<TEnum, Type>)(object)MessageSentTypeMap;
         }
         return null;
     }
