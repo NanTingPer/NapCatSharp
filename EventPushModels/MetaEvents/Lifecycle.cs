@@ -7,17 +7,17 @@ namespace NapCatSharp.EventPushModels.MetaEvents;
 /// <summary>
 /// 生命周期事件
 /// </summary>
-public class Lifecycle : EventBaseModelG<MetaEventType>
+public class Lifecycle : EventBaseModelG<MetaType>
 {
     [JsonPropertyName("meta_event_type")]
-    public MetaEventType MetaEventType { get; set; } = MetaEventType.lifecycle;
+    public MetaType MetaEventType { get; set; } = MetaType.lifecycle;
 
     [JsonPropertyName("sub_type")]
     public SubType Type { get; set; }
 
-    public override MetaEventType GetEnumValue()
+    public override MetaType GetEnumValue()
     {
-        return MetaEventType.lifecycle;
+        return MetaType.lifecycle;
     }
 
     [JsonConverter(typeof(SubTypeConverter))]

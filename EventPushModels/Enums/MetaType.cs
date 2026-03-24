@@ -8,7 +8,7 @@ namespace NapCatSharp.EventPushModels.Enums;
 /// <br/> OneBot 自己产生一类事件
 /// </summary>
 [JsonConverter(typeof(MetaEventTypeConverter))]
-public enum MetaEventType
+public enum MetaType
 {
     /// <summary>
     /// 生命周期
@@ -20,6 +20,6 @@ public enum MetaEventType
     heartbeat,
 }
 
-public class MetaEventTypeConverter : EnumJsonConverter<MetaEventType>
+public class MetaEventTypeConverter : EnumJsonConverter<MetaType>
 {
 }

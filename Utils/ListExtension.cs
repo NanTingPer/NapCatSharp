@@ -1,5 +1,6 @@
 ﻿using NapCatSharp.OB11;
 using System.Text.Json;
+using static NapCatSharp.Core.NapCatHttpSocket;
 
 namespace NapCatSharp.Utils;
 
@@ -16,6 +17,29 @@ public static class ListExtension
         public string ToJson(JsonSerializerOptions? options = null)
         {
             return JsonSerializer.Serialize(oB11MessageModelFlags, options);
+        }
+    }
+
+    extension(List<Action<EventMessageData>> events)
+    {
+        public void operator += (Action<EventMessageData>? ar2)
+        {
+            if(ar2 == null) return;
+            lock (events) {
+                try {
+                    events.Add(ar2);
+                } catch {}
+            }
+        }
+
+        public void operator -= (Action<EventMessageData>? ar2)
+        {
+            if(ar2 == null) return;
+            lock (events) {
+                try {
+                    events.Remove(ar2);
+                } catch {}
+            }
         }
     }
 }

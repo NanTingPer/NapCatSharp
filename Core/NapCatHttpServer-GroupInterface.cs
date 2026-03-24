@@ -1,7 +1,5 @@
-﻿using NapCatSharp.OB11;
-using NapCatSharp.RequestModels;
+﻿using NapCatSharp.RequestModels;
 using NapCatSharp.RequestModels.GroupInterfaces;
-using System.Text.Json;
 
 namespace NapCatSharp.Core;
 

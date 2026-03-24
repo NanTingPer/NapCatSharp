@@ -1,7 +1,7 @@
 ﻿using NapCatSharp.JsonConverter;
 using System.Text.Json.Serialization;
 
-namespace NapCatSharp.EventPushModels;
+namespace NapCatSharp.EventPushModels.Enums;
 
 /// <summary>
 /// 请求类型枚举

@@ -1,21 +1,22 @@
-﻿using System.Text.Json.Serialization;
+﻿using NapCatSharp.EventPushModels.Enums;
+using System.Text.Json.Serialization;
 
 namespace NapCatSharp.EventPushModels.MetaEvents;
 
 /// <summary>
 /// 心跳
 /// </summary>
-public class Heartbeat : EventBaseModelG<MetaEventType>
+public class Heartbeat : EventBaseModelG<MetaType>
 {
     [JsonPropertyName("meta_event_type")]
-    public MetaEventType MetaEventType { get; set; } = MetaEventType.heartbeat;
+    public MetaType MetaEventType { get; set; } = MetaType.heartbeat;
 
     [JsonPropertyName("status")]
     public required Status Statu { get; set; }
 
-    public override MetaEventType GetEnumValue()
+    public override MetaType GetEnumValue()
     {
-        return MetaEventType.heartbeat;
+        return MetaType.heartbeat;
     }
 
     public class Status

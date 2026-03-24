@@ -1,4 +1,5 @@
-﻿using NapCatSharp.JsonConverter;
+﻿using NapCatSharp.EventPushModels.Enums;
+using NapCatSharp.JsonConverter;
 using System.Text.Json.Serialization;
 
 namespace NapCatSharp.EventPushModels.RequestEvents;

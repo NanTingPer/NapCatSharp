@@ -11,9 +11,16 @@ namespace NapCatSharp.EventPushModels;
 /// </summary>
 public static class EnumTypeMap
 {
-    public readonly static FrozenDictionary<MetaEventType, Type> MetaEventTypeMap;
+    public readonly static FrozenDictionary<MetaType, Type> MetaEventTypeMap;
     public readonly static FrozenDictionary<MessageType, Type> MessageEventTypeMap;
     public readonly static FrozenDictionary<RequestType, Type> RequestEventTypeMap;
+    /// <summary> <see cref="PostType"/> 到其子类型的映射 </summary>
+    public readonly static FrozenDictionary<PostType, Type> PostTypeToSubTypeMap = new Dictionary<PostType, Type>()
+    {
+        { PostType.message, typeof(MessageType) },
+        { PostType.meta_event, typeof(MetaType) },
+        { PostType.request, typeof(RequestType) }
+    }.ToFrozenDictionary();
 
     static EnumTypeMap()
     {
@@ -22,15 +29,15 @@ public static class EnumTypeMap
                 t.BaseType.GetGenericTypeDefinition() == typeof(EventBaseModelG<>)
         );
 
-        Dictionary<MetaEventType, Type> metaEventTypeMapCache = [];
+        Dictionary<MetaType, Type> metaEventTypeMapCache = [];
         Dictionary<MessageType, Type> messageEventTypeMapCache = [];
         Dictionary<RequestType, Type> requestEventTypeMapCache = [];
 
         var eventBaseModelType = eventModelTypes.Select(t => (th: t, baset: t.BaseType));
 
         foreach (var item in eventBaseModelType) {
-            if (item.baset!.GetGenericArguments().Contains(typeof(MetaEventType))) {
-                var th = (EventBaseModelG<MetaEventType>)Activator.CreateInstance(item.th)!;
+            if (item.baset!.GetGenericArguments().Contains(typeof(MetaType))) {
+                var th = (EventBaseModelG<MetaType>)Activator.CreateInstance(item.th)!;
                 metaEventTypeMapCache[th.GetEnumValue()] = item.th;
             }
 
@@ -55,12 +62,20 @@ public static class EnumTypeMap
     {
         if(typeof(TEnum) == typeof(MessageType)) {
             return (FrozenDictionary<TEnum, Type>)(object)MessageEventTypeMap;
-        } else if(typeof(TEnum) == typeof(MetaEventType)) {
+        } else if(typeof(TEnum) == typeof(MetaType)) {
             return (FrozenDictionary<TEnum, Type>)(object)MetaEventTypeMap;
         } else if(typeof(TEnum) == typeof(RequestType)) {
             return (FrozenDictionary<TEnum, Type>)(object)RequestEventTypeMap;
         }
         return null;
+    }
+
+    public static Type GetPostSubType(PostType postType)
+    {
+        if (PostTypeToSubTypeMap.TryGetValue(postType, out var type)) {
+            return type;
+        }
+        return null!;
     }
 
 #pragma warning disable CA2255 // 不应在库中使用 “ModuleInitializer” 属性
@@ -69,5 +84,10 @@ public static class EnumTypeMap
     internal static void ModuleInitializer()
     {
 
+    }
+
+    extension(PostType postType)
+    {
+        public Type SubType => GetPostSubType(postType);
     }
 }
