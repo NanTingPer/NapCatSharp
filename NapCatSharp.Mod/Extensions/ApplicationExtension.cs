@@ -4,7 +4,7 @@ public static class ApplicationExtension
 {
     public static WebApplication UseModSwagger(this WebApplication application)
     {
-        application.UseModSwagger();
+        application.UseSwagger();
         application.UseSwaggerUI();
         return application;
     }
