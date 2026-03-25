@@ -7,6 +7,7 @@ namespace NapCatSharp.Core;
 
 public abstract class Mod
 {
+    public string ModName => this.GetType().Name;
     public virtual void MetaLifecycle(Lifecycle lifecycle){}
     public virtual void MetaHeartbeat(Heartbeat heartbeat){}
     public virtual void MessagePrivate(PrivateMessage message){}
