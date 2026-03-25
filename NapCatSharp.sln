@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NapCatSharp.AppHost", "NapC
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NapCatSharp.ServiceDefaults", "NapCatSharp.ServiceDefaults\NapCatSharp.ServiceDefaults.csproj", "{F194CEA4-9B56-96C8-D4BA-9ADC1EC1A632}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestMod", "TestMod\TestMod.csproj", "{795772BB-55F7-4555-BBB9-CBC96EBBAD54}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{F194CEA4-9B56-96C8-D4BA-9ADC1EC1A632}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F194CEA4-9B56-96C8-D4BA-9ADC1EC1A632}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F194CEA4-9B56-96C8-D4BA-9ADC1EC1A632}.Release|Any CPU.Build.0 = Release|Any CPU
+		{795772BB-55F7-4555-BBB9-CBC96EBBAD54}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{795772BB-55F7-4555-BBB9-CBC96EBBAD54}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{795772BB-55F7-4555-BBB9-CBC96EBBAD54}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{795772BB-55F7-4555-BBB9-CBC96EBBAD54}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -6,7 +6,7 @@ public static class AssemblyExtensions
 {
     public static Type[] GetModTypes(this Assembly assembly)
     {
-        return assembly.GetTypes().Where(f => f.IsAssignableFrom(typeof(NapCatSharp.Core.Mod))
+        return assembly.GetTypes().Where(f => f.IsAssignableTo(typeof(NapCatSharp.Core.Mod))
             && !f.IsAbstract && !f.IsInterface).ToArray();
     }
 }

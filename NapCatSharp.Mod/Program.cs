@@ -1,4 +1,7 @@
-﻿using NapCatSharp.Mod.Extensions;
+﻿using NapCatSharp.Mod.Core;
+using NapCatSharp.Mod.Extensions;
+
+ModLoader.LoadMods();
 
 var builder = WebApplication.CreateBuilder(args);
 

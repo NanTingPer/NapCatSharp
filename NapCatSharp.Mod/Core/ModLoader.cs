@@ -1,6 +1,4 @@
-﻿using static System.Runtime.InteropServices.JavaScript.JSType;
-
-namespace NapCatSharp.Mod.Core;
+﻿namespace NapCatSharp.Mod.Core;
 
 public static class ModLoader
 {
