@@ -23,12 +23,14 @@ public static class ServiceCollectionExtension
         ModLoader.LoadMods();
         var modManager = new ModManager(ModContext.Mods);
             services
-            .AddSingleton(ModContext.Mods)
-            .AddSingleton(modManager)
-            //.AddHostedService<SocketRecive>()
-            .AddHostedService<SocketRegionService>()
+            .AddSingleton<List<NapCatSharp.Core.Mod>>(ModContext.Mods)
+            .AddSingleton<ModManager>(modManager)
+            .AddSingleton<SocketRegionService>()
+            .AddHostedService<SocketRegionService>(sp =>
+                sp.GetService<SocketRegionService>()!)
             .AddSingleton<NapCatSocketManager>()
             ;
+            //.AddHostedService<SocketRecive>()
         return services;
     }
 }

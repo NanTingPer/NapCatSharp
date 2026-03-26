@@ -8,6 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 builder.Services
+    .AddNapCatSharpServices()
     .AddControllers()
     .AddControllersAsServices();
 // Add services to the container.

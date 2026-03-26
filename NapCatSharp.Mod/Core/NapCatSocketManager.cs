@@ -47,9 +47,9 @@ public class NapCatSocketManager
     /// <param name="password"> socket链接密码 </param>
     /// <param name="exception"> 如果创建失败，如uri无效， 则抛出</param>
     /// <returns> 如果创建成功返回true, 如果创建失败返回false </returns>
-    public bool CreateSocket(string name, Uri uri, string password, out Exception? exception)
+    public bool CreateSocket(string name, Uri uri, string password, out Exception exception)
     {
-        exception = null;
+        exception = null!;
         if (NapCatSockets.ContainsKey(name)) {
             exception = new Exception("名称重复。");
             return false;
