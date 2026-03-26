@@ -47,6 +47,8 @@ public class NapCatHttpSocket
     /// </summary>
     public event Action<NapCatHttpSocket, WebSocketMessageType, string>? Message = null;
 
+    public WebSocketState Statu => socket.State;
+
     private delegate EventBaseModel? GetDataDelegate(JsonElement rootElement, string propName, out Enum? enumValue);
     #region static ctor
     private readonly static List<Type> enumTypes = [typeof(MessageType), typeof(MetaType), typeof(RequestType), typeof(MessageSentType)];
@@ -224,6 +226,20 @@ public class NapCatHttpSocket
             // 分发事件
             EventDispatch(doc, postType);
         }
+    }
+
+    public void Stop()
+    {
+        try {
+            subTypeEvent.Clear();
+        } catch {}
+        try {
+            socket.Abort();
+        } catch {}
+
+        try {
+            socket.Dispose();
+        } catch {}
     }
 
     private void EventDispatch(JsonDocument jsonDoc, PostType? postType)

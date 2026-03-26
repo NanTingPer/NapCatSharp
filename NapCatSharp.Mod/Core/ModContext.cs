@@ -8,6 +8,7 @@ namespace NapCatSharp.Mod.Core;
 public class ModContext : AssemblyLoadContext
 {
     internal readonly static List<NapCatSharp.Core.Mod> Mods = [];
+    /// <summary> 所以Mod的根目录 </summary>
     public readonly static string ModPath = Path.Combine(AppContext.BaseDirectory, "Mods");
     internal readonly static ConcurrentDictionary<string, Assembly> ModAssemblys = [];
     internal readonly static ConcurrentDictionary<string, ModContext> ModContexts = [];
@@ -27,8 +28,9 @@ public class ModContext : AssemblyLoadContext
             Path.Combine(ModPath, name, name + ".dll");
 
         Unloading += context => {
-            ModAssemblys.TryRemove(modName, out _);
-            ModContexts.TryRemove(modName, out _);
+            ModAssemblys.TryRemove(modName, out _); // 移除Assembly引用
+            ModContexts.TryRemove(modName, out _); // 移除context引用
+            Mods.RemoveAll(f => f.ModName == modName); // 移除mod实例
         };
     }
     protected override Assembly? Load(AssemblyName assemblyName)
@@ -74,5 +76,12 @@ public class ModContext : AssemblyLoadContext
         }
         assembly = null;
         return false;
+    }
+
+    public static void UnLoadMod(string modName)
+    {
+        if (ModContexts.TryGetValue(modName, out var value)) {
+            value.Unload();
+        }
     }
 }

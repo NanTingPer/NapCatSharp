@@ -1,4 +1,7 @@
-﻿using System.Reflection;
+﻿using NapCatSharp.Mod.BackgroundServices;
+using NapCatSharp.Mod.ConfigEntitys;
+using NapCatSharp.Mod.Core;
+using System.Reflection;
 
 namespace NapCatSharp.Mod.Extensions;
 
@@ -12,6 +15,20 @@ public static class ServiceCollectionExtension
             options.IncludeXmlComments(path);
         });
 
+        return services;
+    }
+
+    public static IServiceCollection AddNapCatSharpServices(this IServiceCollection services)
+    {
+        ModLoader.LoadMods();
+        var modManager = new ModManager(ModContext.Mods);
+            services
+            .AddSingleton(ModContext.Mods)
+            .AddSingleton(modManager)
+            //.AddHostedService<SocketRecive>()
+            .AddHostedService<SocketRegionService>()
+            .AddSingleton<NapCatSocketManager>()
+            ;
         return services;
     }
 }

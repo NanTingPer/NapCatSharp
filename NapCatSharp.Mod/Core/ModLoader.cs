@@ -1,4 +1,6 @@
-﻿namespace NapCatSharp.Mod.Core;
+﻿using NapCatSharp.OB11.OB11MessageModels;
+
+namespace NapCatSharp.Mod.Core;
 
 public static class ModLoader
 {
@@ -30,5 +32,40 @@ public static class ModLoader
             var mod = (NapCatSharp.Core.Mod)Activator.CreateInstance(modTypes[0])!;
             ModContext.Mods.Add(mod);
         }
+    }
+
+    internal static bool LoadMod(string modName)
+    {
+        var moddir = Path.Combine(ModContext.ModPath, modName);
+        if (!Directory.Exists(moddir)) {
+            return false; // 给定模组文件夹不存在
+        }
+
+        var files = Directory.GetFiles(moddir);
+        if(!files.Any(file => Path.GetFileName(file).Replace(".dll", "") == modName)) {
+            return false; // 给定模组文件夹中找不到主程序集 (要与Mod名称一致)
+        }
+
+        var context = new ModContext(modName);
+        var modAssembly = context.LoadFromAssemblyPath(context.assemblyPath);
+        var modTypes = modAssembly.GetModTypes();
+        if (modTypes.Length != 1) {
+            context.Unload();
+            throw new Exception($"一个程序集只能包含一个Mod，但在{modName}中发现多个");
+        }
+        var mod = (NapCatSharp.Core.Mod)Activator.CreateInstance(modTypes[0])!;
+        ModContext.Mods.Add(mod);
+        return true;
+    }
+
+    internal static bool ReLoadMod(string modName)
+    {
+        try {
+            ModContext.UnLoadMod(modName);
+            LoadMod(modName);
+        } catch {
+            return false;
+        }
+        return true;
     }
 }

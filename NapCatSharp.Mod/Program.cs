@@ -2,15 +2,12 @@
 using NapCatSharp.Mod.Core;
 using NapCatSharp.Mod.Extensions;
 
-ModLoader.LoadMods();
-var modManager = new ModManager(ModContext.Mods);
+
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 builder.Services
-    .AddSingleton<List<NapCatSharp.Core.Mod>>(ModContext.Mods)
-    .AddSingleton<ModManager>(modManager)
     .AddControllers()
     .AddControllersAsServices();
 // Add services to the container.
@@ -19,7 +16,7 @@ builder.Services
 
 builder.Services
     .AddModSwaggerGen()
-    .AddHostedService<SocketRecive>();
+    ;
 
 var app = builder.Build();
 app.MapDefaultEndpoints();
