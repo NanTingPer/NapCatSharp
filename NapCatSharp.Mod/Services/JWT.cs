@@ -28,6 +28,7 @@ public class JWTAttribute : Attribute
         if(jwtStr.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase)) {
             jwtStr = jwtStr["Bearer ".Length..];
         }
+        jwtStr = jwtStr.Trim();
         var configuration = context.RequestServices.GetService<IConfiguration>();
         var skey = configuration!.GetValue("jwtKey", string.Empty);
         if (!await VerifyToken(jwtStr, skey)) {

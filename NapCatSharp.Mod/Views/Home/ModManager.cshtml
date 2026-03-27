@@ -1,0 +1,37 @@
+﻿@{
+    ViewData["Title"] = "Mod Manager";
+}
+<div>
+    <h1> 欢迎访问模组管理器 </h1>
+    <h2> 已启用模组 </h2>
+    <div id="modList"></div>
+    <script>
+        async function modList() {
+            console.log(window.apiUrl);
+            window.apiUrl = localStorage['apiUrl'];
+            let listElement = document.getElementById('modList');
+            let modListResponse = await fetch(`${window.apiUrl}modmanager/modlist`, 
+                { 
+                    method: "POST",
+                    headers: {
+                        "Content-Type" : "application/json",
+                        "Authorization" : ` ${localStorage['jwt']}`
+                    }
+                }
+            );
+            if (modListResponse.status != 200) {
+                window.location.href = `${window.apiUrl}`;
+            }
+            let modList = await modListResponse.json();
+            let htmlValue = "";
+            htmlValue += `<table>`;
+            modList.forEach(mod => {
+                htmlValue += `<tr> ${mod} <tr>`
+            });
+            htmlValue += `</table>`;
+            listElement.innerHTML = htmlValue;
+        }
+        modList();
+    </script>
+    
+</div>

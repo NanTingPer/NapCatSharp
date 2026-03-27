@@ -45,7 +45,7 @@ public class LoginController(IConfiguration configuration) : ControllerBase
     }
 
     [HttpPost("login")]
-    public IActionResult Login([FromBody] LoginInputModel login)
+    public ActionResult<LoginOutputModel> Login([FromBody] LoginInputModel login)
     {
         try {
             if (login.RequestId == string.Empty) return NotFound(NotFoundJson.Not);
@@ -59,7 +59,7 @@ public class LoginController(IConfiguration configuration) : ControllerBase
             var password = Encoding.UTF8.GetString(decryptBytes);
             if (VerifyPassword(password)) {
                 var skey = configuration.GetValue("jwtKey", string.Empty);
-                return Ok(JWTAttribute.CreateToken(skey));
+                return Ok(new LoginOutputModel() { Token = JWTAttribute.CreateToken(skey) });
             } else {
                 return NotFound(NotFoundJson.Not);
             }

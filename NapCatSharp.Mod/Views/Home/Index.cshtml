@@ -4,5 +4,50 @@
 
 <div class="text-center">
     <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+    <script src="~/lib/jsencrypt/jsencrypt.js"></script>
+    <script src="~/js/site.js"></script>
+    <script>
+        // 全局url
+        console.log(window.apiUrl);
+        localStorage['apiUrl'] = `${window.location.protocol}//${window.location.hostname}:${window.location.port}/`;
+        window.apiUrl = localStorage['apiUrl'];
+        async function login() {
+            /**
+             *  按照流程
+             *  - 先获取公钥 -> 会返回requestid 登录时使用
+             *  - 使用公钥加密密钥
+             *  - 使用加密后的密码登录，需要传入 requestid
+             *  - 登录后返回jwt
+             */
+
+            let passValue = document.getElementById("pass").value;
+            let pkresponse = await fetch(`${window.apiUrl}login/publicKey`,{
+                method: "POST"
+            });
+            if(!(pkresponse.status == 200)){
+                return;
+            }
+            let obj = await pkresponse.json();
+            let ps = await encryptedPassword(passValue, obj.publicKey);
+            let jwtResponse = await fetch(`${window.apiUrl}login/login`, {
+                method: "POST",
+                body: JSON.stringify({password: ps, requestId: obj.requestId}),
+                headers: {
+                    "Content-Type" : "application/json"
+                }
+            });
+            if (!(jwtResponse.status == 200)){
+                return;
+            }
+            alert("登录成功");
+            let jwt = (await jwtResponse.json()).token;
+            localStorage['jwt'] = jwt;
+            console.log(`${window.apiUrl}Home/ModManager`);
+            window.location.href = `${window.apiUrl}Home/ModManager`
+        }
+    </script>
+    <from>
+        <input type="password" id="pass">
+        <input type="button" id="sub" onclick="login()" value="登录" >
+    </from>
 </div>
