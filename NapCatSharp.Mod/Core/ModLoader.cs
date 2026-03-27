@@ -7,6 +7,9 @@ public static class ModLoader
     internal static void LoadMods()
     {
         var modPath = ModContext.ModPath;
+        if (!Directory.Exists(modPath)) {
+            Directory.CreateDirectory(modPath);
+        }
         var modNames = Directory.GetDirectories(modPath); // 绝对文件夹路径
         
         // 仅包含名称
@@ -67,5 +70,10 @@ public static class ModLoader
             return false;
         }
         return true;
+    }
+
+    internal static void DisableMod(string modName)
+    {
+        ModContext.UnLoadMod(modName);
     }
 }
