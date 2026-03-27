@@ -3,22 +3,42 @@
 }
 <div>
     <h1> 欢迎访问模组管理器 </h1>
-    <h2> 已启用模组 </h2>
+    <h2 id="enableModText"> 已启用模组 </h2>
     <div id="modList"></div>
+    <h2>本地模组列表</h2>
+    <div id="localModList"></div>
     <script>
-        async function modList() {
-            console.log(window.apiUrl);
-            window.apiUrl = localStorage['apiUrl'];
-            let listElement = document.getElementById('modList');
-            let modListResponse = await fetch(`${window.apiUrl}modmanager/modlist`, 
+        async function fetchPost(url, body = undefined) {
+            return await fetch(`${window.apiUrl}${url}`, 
                 { 
                     method: "POST",
+                    body: body,
                     headers: {
                         "Content-Type" : "application/json",
                         "Authorization" : ` ${localStorage['jwt']}`
                     }
                 }
             );
+        }
+        async function reloadList() {
+            await modList();
+            await localModList();
+        }
+        async function disableMod(modName) {
+            await fetchPost(`modmanager/disablemod`, JSON.stringify({ modname: modName }));
+            await reloadList();
+        }
+        async function reloadMod(modName) {
+            await fetchPost(`modmanager/reloadmod`, JSON.stringify({ modname: modName}));
+            await reloadList();
+        }
+        async function enableMod(modName) {
+            await fetchPost(`modmanager/enablemod`, JSON.stringify({ modname: modName}));
+            await reloadList();
+        }
+        async function modList() {
+            let listElement = document.getElementById('modList');
+            let modListResponse = await fetchPost(`modmanager/modlist`);
             if (modListResponse.status != 200) {
                 window.location.href = `${window.apiUrl}`;
             }
@@ -26,12 +46,44 @@
             let htmlValue = "";
             htmlValue += `<table>`;
             modList.forEach(mod => {
-                htmlValue += `<tr> ${mod} <tr>`
+                htmlValue += `<tr> <td>`;
+                htmlValue += mod;
+                htmlValue += `</td> <td>`;
+                htmlValue += `<input type="button" id="mod-${mod}-disable" value="禁用" onclick="disableMod('${mod}')">`;
+                htmlValue += `<input type="button" id="mod-${mod}-reload" value="重启" onclick="reloadMod('${mod}')">`;
+                htmlValue += `</td> <tr>`;
             });
             htmlValue += `</table>`;
             listElement.innerHTML = htmlValue;
+            let textElement = document.getElementById('enableModText');
+            if (modList.length <= 0){
+                textElement.innerHTML = "暂无已启用模组";
+            } else {
+                textElement.innerHTML = "已启用模组";
+            }
+        }
+
+        
+        async function localModList() {
+            let localListElement = document.getElementById('localModList');
+            let localmodListResponse = await fetchPost(`modmanager/localMods`);
+            if (localmodListResponse.status != 200) {
+                window.location.href = `${window.apiUrl}`;
+            }
+            let localModList = await localmodListResponse.json();
+            let htmlValue = "";
+            htmlValue += `<table>`;
+            localModList.forEach(mod => {
+                htmlValue += `<tr> <td>`;
+                htmlValue += mod;
+                htmlValue += `</td> <td>`;
+                htmlValue += `<input type="button" id="mod-${mod}-localMod" value="启用" onclick="enableMod('${mod}')">`;
+                htmlValue += `</td> <tr>`;
+            });
+            htmlValue += `</table>`;
+            localListElement.innerHTML = htmlValue;
         }
         modList();
+        localModList();
     </script>
-    
 </div>

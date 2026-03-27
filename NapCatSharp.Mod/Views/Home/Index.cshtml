@@ -7,10 +7,6 @@
     <script src="~/lib/jsencrypt/jsencrypt.js"></script>
     <script src="~/js/site.js"></script>
     <script>
-        // 全局url
-        console.log(window.apiUrl);
-        localStorage['apiUrl'] = `${window.location.protocol}//${window.location.hostname}:${window.location.port}/`;
-        window.apiUrl = localStorage['apiUrl'];
         async function login() {
             /**
              *  按照流程
@@ -19,7 +15,6 @@
              *  - 使用加密后的密码登录，需要传入 requestid
              *  - 登录后返回jwt
              */
-
             let passValue = document.getElementById("pass").value;
             let pkresponse = await fetch(`${window.apiUrl}login/publicKey`,{
                 method: "POST"
@@ -46,8 +41,8 @@
             window.location.href = `${window.apiUrl}Home/ModManager`
         }
     </script>
-    <from>
+    <form>
         <input type="password" id="pass">
         <input type="button" id="sub" onclick="login()" value="登录" >
-    </from>
+    </form>
 </div>

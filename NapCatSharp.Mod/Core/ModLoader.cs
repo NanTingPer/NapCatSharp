@@ -6,23 +6,8 @@ public static class ModLoader
 {
     internal static void LoadMods()
     {
-        var modPath = ModContext.ModPath;
-        if (!Directory.Exists(modPath)) {
-            Directory.CreateDirectory(modPath);
-        }
-        var modNames = Directory.GetDirectories(modPath); // 绝对文件夹路径
-        
         // 仅包含名称
-        var validModNames = modNames.Where(dir => {
-            var modName = dir.Split(Path.DirectorySeparatorChar)[^1];
-            var files = Directory.GetFiles(dir);
-            foreach (var file in files) {
-                if (Path.GetFileName(file).Replace(".dll", "") == modName) {
-                    return true;
-                }
-            }
-            return false;
-        }).Select(f => f.Split(Path.DirectorySeparatorChar)[^1]);
+        var validModNames = LocalMods();
 
         foreach (var modName in validModNames) {
             var context = new ModContext(modName);
@@ -59,6 +44,31 @@ public static class ModLoader
         var mod = (NapCatSharp.Core.Mod)Activator.CreateInstance(modTypes[0])!;
         ModContext.Mods.Add(mod);
         return true;
+    }
+
+    /// <summary>
+    /// 本地可启用模组
+    /// </summary>
+    internal static List<string> LocalMods()
+    {
+        var modPath = ModContext.ModPath;
+        if (!Directory.Exists(modPath)) {
+            Directory.CreateDirectory(modPath);
+        }
+        var modNames = Directory.GetDirectories(modPath); // 绝对文件夹路径
+
+        // 仅包含名称
+        var validModNames = modNames.Where(dir => {
+            var modName = dir.Split(Path.DirectorySeparatorChar)[^1];
+            var files = Directory.GetFiles(dir);
+            foreach (var file in files) {
+                if (Path.GetFileName(file).Replace(".dll", "") == modName) {
+                    return true;
+                }
+            }
+            return false;
+        }).Select(f => f.Split(Path.DirectorySeparatorChar)[^1]);
+        return [.. validModNames];
     }
 
     internal static bool ReLoadMod(string modName)
