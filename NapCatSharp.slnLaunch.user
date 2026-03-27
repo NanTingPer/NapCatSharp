@@ -5,7 +5,7 @@
       {
         "Path": "NapCatSharp.Mod\\NapCatSharp.Mod.csproj",
         "Action": "Start",
-        "DebugTarget": "http"
+        "DebugTarget": "https"
       }
     ]
   }

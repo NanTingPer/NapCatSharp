@@ -1,14 +1,15 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using NapCatSharp.Mod.Core;
+using NapCatSharp.Mod.Services;
 
 namespace NapCatSharp.Mod.Controllers;
 
-#if DEBUG
 [ApiController]
 [Route("socket")]
-public class SocketController(NapCatSocketManager manager) : ControllerBase
+public class SocketController(NapCatSocketManager manager, IConfiguration configuration) : ControllerBase
 {
-    private NapCatSocketManager manager = manager;
+    private readonly IConfiguration configuration = configuration;
+    private readonly NapCatSocketManager manager = manager;
 
     /// <summary>
     /// 创建<see cref="NapCatSharp.Core.NapCatHttpSocket"/>
@@ -16,6 +17,7 @@ public class SocketController(NapCatSocketManager manager) : ControllerBase
     /// <param name="model"></param>
     /// <returns></returns>
     [HttpPost("create")]
+    [JWT]
     public IActionResult CreateSocket([FromBody] CreateSocketModel model)
     {
         Uri? uri = null;
@@ -46,4 +48,3 @@ public class CreateSocketModel
     /// </summary>
     public string Password { get; set; } = string.Empty;
 }
-#endif

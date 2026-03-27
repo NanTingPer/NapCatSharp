@@ -1,8 +1,5 @@
-﻿using NapCatSharp.Mod.BackgroundServices;
-using NapCatSharp.Mod.Core;
-using NapCatSharp.Mod.Extensions;
-
-
+﻿using NapCatSharp.Mod.Extensions;
+using NapCatSharp.Mod.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,9 +14,15 @@ builder.Services
 
 builder.Services
     .AddModSwaggerGen()
+    .AddSingleton<JWTMiddleware>()
+    //.AddAuthentication()
     ;
 
 var app = builder.Build();
+app.UseRouting()
+    //.UseAuthentication()
+    //.UseAuthorization()
+    .UseMiddleware<JWTMiddleware>();
 app.MapDefaultEndpoints();
 app.UseModSwagger();
 // Configure the HTTP request pipeline.
@@ -31,9 +34,7 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseAuthorization();
 app.MapControllers();
-app.UseRouting();
 app.MapStaticAssets();
 
 app.MapControllerRoute(
