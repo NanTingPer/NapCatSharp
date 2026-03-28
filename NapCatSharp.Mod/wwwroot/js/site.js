@@ -12,7 +12,7 @@ async function encryptedPassword(password, publicKey)
 }
 
 /** 
- * 刷新JWT并缓存到 localStorage['jwt'] 
+ * 刷新JWT并缓存到 sessionStorage['jwt'] 
  * 
  * return bool 如果true则成功，否则失败
 */
@@ -51,7 +51,7 @@ async function flushToken(password = "") {
         return false;
     }
     let jwt = (await jwtResponse.json()).token;
-    localStorage['jwt'] = jwt;
+    sessionStorage['jwt'] = jwt;
     return true;
 }
 
@@ -62,7 +62,7 @@ async function flushToken(password = "") {
  * @param { BodyInit | null } body 请求体
  * @returns 成功则返回 response, 失败返回 { status: 404 }
  */
-async function fetchPost(url, body, recount = 1, ) {
+async function fetchPost(url, body, recount = 1) {
     let count = 0;
     console.log(body)
     do {
@@ -72,7 +72,7 @@ async function fetchPost(url, body, recount = 1, ) {
             body: body == null || body == undefined ? null : body,
             headers: {
                 "Content-Type" : "application/json",
-                "Authorization" : ` ${localStorage['jwt']}`
+                "Authorization" : ` ${sessionStorage['jwt']}`
             }
         });
         if(response.status == 200){
