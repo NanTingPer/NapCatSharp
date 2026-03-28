@@ -17,12 +17,13 @@ public class JWTAttribute : Attribute
 #endif
         // view 没有终结点
 #pragma warning disable CS0162 // 检测到无法访问的代码
-        var actionDesc = context.GetEndpoint()?.Metadata?.GetMetadata<ControllerActionDescriptor>();
+        var actionDesc = context.GetEndpoint()?.Metadata?.GetMetadata<JWTAttribute>();
+        var le = context.GetEndpoint();
 #pragma warning restore CS0162 // 检测到无法访问的代码
         if (actionDesc == null) return true;
-        if (actionDesc?.MethodInfo.GetCustomAttribute<JWTAttribute>() == null) {
-            return true;
-        }
+        //if (actionDesc?.MethodInfo.GetCustomAttribute<JWTAttribute>() == null) {
+        //    return true;
+        //}
 
         var jwtStr = context.Request.Headers.Authorization.ToString();
         if(jwtStr.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase)) {

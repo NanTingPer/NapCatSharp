@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using NapCatSharp.Mod.Models;
+using NapCatSharp.Mod.Services;
 
 namespace NapCatSharp.Mod.Controllers;
 
@@ -17,6 +18,11 @@ public class HomeController : Controller
     }
 
     public IActionResult ModManager()
+    {
+        return View();
+    }
+
+    public IActionResult SocketManager()
     {
         return View();
     }

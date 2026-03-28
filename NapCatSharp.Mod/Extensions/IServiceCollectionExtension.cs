@@ -1,6 +1,6 @@
 ﻿using NapCatSharp.Mod.BackgroundServices;
-using NapCatSharp.Mod.ConfigEntitys;
 using NapCatSharp.Mod.Core;
+using NapCatSharp.Mod.Services;
 using System.Reflection;
 
 namespace NapCatSharp.Mod.Extensions;

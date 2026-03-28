@@ -2,10 +2,10 @@
 using NapCatSharp.Mod.Core;
 using System.Collections.Concurrent;
 
-namespace NapCatSharp.Mod.ConfigEntitys;
+namespace NapCatSharp.Mod.Services;
 
 /// <summary>
-/// <see cref="NapCatSharp.Core.NapCatHttpSocket"/> 注册服务
+/// <see cref="NapCatHttpSocket"/> 注册服务
 /// </summary>
 public class SocketRegionService : BackgroundService
 {
@@ -24,7 +24,7 @@ public class SocketRegionService : BackgroundService
                 await task.Socket.Connection(stoppingToken);
             } catch(Exception e) {
                 if (!stoppingToken.IsCancellationRequested) {
-                    task.ConnectionErrorCall?.Invoke(this, task.Socket, e);
+                    await (task.ConnectionErrorCall?.Invoke(this, task.Socket, e) ?? Task.CompletedTask);
                 }
                 continue;
             }
@@ -79,7 +79,7 @@ public class SocketRegionService : BackgroundService
             await task.Socket.Receive(cancellationToken);
         } catch(Exception e) {
             if (!cancellationToken.IsCancellationRequested) {
-                task.ReciveErrorCall?.Invoke(this, task.Socket, e);
+                await (task.ReciveErrorCall?.Invoke(this, task.Socket, e) ?? Task.CompletedTask);
             }
         } finally {
             UnsubscribeEvents(task.Socket);
@@ -98,4 +98,4 @@ public class QueueSocketTask(
     public ErrorCall? ReciveErrorCall { get; set; } = reciveErrorCall;
 }
 
-public delegate void ErrorCall(SocketRegionService service, NapCatHttpSocket socket, Exception exception);
+public delegate Task ErrorCall(SocketRegionService service, NapCatHttpSocket socket, Exception exception);

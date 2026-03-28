@@ -1,5 +1,6 @@
 ﻿using NapCatSharp.Core;
 using NapCatSharp.Mod.ConfigEntitys;
+using NapCatSharp.Mod.Services;
 using System.Collections.Concurrent;
 
 namespace NapCatSharp.Mod.Core;
@@ -19,6 +20,9 @@ public class NapCatSocketManager
     {
         region = service;
     }
+    /// <summary>
+    /// key是socket的名称
+    /// </summary>
     internal readonly ConcurrentDictionary<string, NapCatHttpSocket> NapCatSockets = [];
     public bool RemoveSocket(string name)
     {
@@ -61,7 +65,10 @@ public class NapCatSocketManager
                 Password = password
             };
             NapCatSockets.TryAdd(name, socket);
-            region.Enqueue(new QueueSocketTask(socket)); // 这里可以添加错误回调
+            region.Enqueue(new QueueSocketTask(
+                socket, 
+                connectionErrorCall: ErrorCallRemove, 
+                reciveErrorCall: ErrorCallReConnection)); // 这里可以添加错误回调
         } catch(Exception e) {
             exception = e;
             RemoveSocket(name);
@@ -69,4 +76,24 @@ public class NapCatSocketManager
         }
         return true;
     }
+
+    private Task ErrorCallReConnection(SocketRegionService region, NapCatHttpSocket socket, Exception e)
+    {
+        region.ReConnection(new QueueSocketTask(socket, ErrorCallRemove, ErrorCallRemove));
+        return Task.CompletedTask;
+    }
+
+    private Task ErrorCallRemove(SocketRegionService region, NapCatHttpSocket socket, Exception e)
+    {
+        RemoveSocket(socket);
+        return Task.CompletedTask;
+    }
+
+    public List<SocketEntity> Sockets => [.. NapCatSockets.Select(s => new SocketEntity() 
+    { 
+        IsEnable = true, 
+        Name = s.Key, 
+        Password = s.Value.Password ?? string.Empty, 
+        Uri = s.Value.Uri.ToString() 
+    })];
 }

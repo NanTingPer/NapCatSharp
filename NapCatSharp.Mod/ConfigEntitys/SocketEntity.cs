@@ -12,4 +12,7 @@ public class SocketEntity
 
     [JsonPropertyName("password")]
     public string Password { get; set; } = string.Empty;
+
+    [JsonPropertyName("isEnable")]
+    public bool IsEnable { get; set; } = false;
 }

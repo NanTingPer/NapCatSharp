@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using NapCatSharp.Mod.ConfigEntitys;
 using NapCatSharp.Mod.Core;
 using NapCatSharp.Mod.Services;
 
@@ -30,6 +31,17 @@ public class SocketController(NapCatSocketManager manager, IConfiguration config
             return Ok();
         }
         return BadRequest(exp.Message);
+    }
+
+    /// <summary>
+    /// 获取当前已启用的socket列表
+    /// </summary>
+    /// <returns></returns>
+    [JWT]
+    [HttpPost("socketList")]
+    public ActionResult<List<SocketEntity>> SocketList()
+    {
+        return Ok(manager.Sockets);
     }
 }
 
