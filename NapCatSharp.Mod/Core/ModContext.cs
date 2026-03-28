@@ -7,11 +7,11 @@ namespace NapCatSharp.Mod.Core;
 
 public class ModContext : AssemblyLoadContext
 {
-    internal readonly static List<NapCatSharp.Core.Mod> Mods = [];
+    internal readonly static List<WeakReference<NapCatSharp.Core.Mod>> Mods = [];
     /// <summary> 所以Mod的根目录 </summary>
     public readonly static string ModPath = Path.Combine(AppContext.BaseDirectory, "Mods");
-    internal readonly static ConcurrentDictionary<string, Assembly> ModAssemblys = [];
-    internal readonly static ConcurrentDictionary<string, ModContext> ModContexts = [];
+    internal readonly static ConcurrentDictionary<string, WeakReference<Assembly>> ModAssemblys = [];
+    internal readonly static ConcurrentDictionary<string, WeakReference<ModContext>> ModContexts = [];
     internal readonly string assemblyPath;
     public string? modName;
     public ModContext(string? name, bool isCollectible = true)
@@ -23,14 +23,19 @@ public class ModContext : AssemblyLoadContext
         if (ModContexts.ContainsKey(name)) {
             throw new Exception($"已有同名模组, {name}");
         }
-        ModContexts[name] = this;
+        ModContexts[name] = new WeakReference<ModContext>(this);
         assemblyPath =
             Path.Combine(ModPath, name, name + ".dll");
 
         Unloading += context => {
             ModAssemblys.TryRemove(modName, out _); // 移除Assembly引用
             ModContexts.TryRemove(modName, out _); // 移除context引用
-            Mods.RemoveAll(f => f.ModName == modName); // 移除mod实例
+            Mods.RemoveAll(f => {
+                if (f.TryGetTarget(out var target)) {
+                    return target.ModName == modName;
+                }
+                return false;
+            }); // 移除mod实例
         };
     }
     protected override Assembly? Load(AssemblyName assemblyName)
@@ -44,7 +49,7 @@ public class ModContext : AssemblyLoadContext
         }
         var assembly = LoadFromAssemblyPath(assemblyPath);
         if(modName == assemblyName.Name) {
-            ModAssemblys[modName] = assembly;
+            ModAssemblys[modName] = new WeakReference<Assembly>(assembly);
         }
         return assembly;
     }
@@ -68,7 +73,7 @@ public class ModContext : AssemblyLoadContext
         return nint.Zero;
     }
 
-    public static bool TryGetModAssembly(string modName, out Assembly? assembly)
+    public static bool TryGetModAssembly(string modName, out WeakReference<Assembly>? assembly)
     {
         if(ModAssemblys.TryGetValue(modName, out var a)) {
             assembly = a;
@@ -81,7 +86,12 @@ public class ModContext : AssemblyLoadContext
     public static void UnLoadMod(string modName)
     {
         if (ModContexts.TryGetValue(modName, out var value)) {
-            value.Unload();
+            if (value.TryGetTarget(out var target)) {
+                target.Unload();
+                GC.Collect(); // 不回收要等到被动回收，在那之前 文件仍然被引用
+                GC.WaitForPendingFinalizers();
+                GC.Collect();
+            }
         }
     }
 }

@@ -19,7 +19,7 @@ public static class ModLoader
                 throw new Exception($"一个程序集只能包含一个Mod，但在{modName}中发现多个");
             }
             var mod = (NapCatSharp.Core.Mod)Activator.CreateInstance(modTypes[0])!;
-            ModContext.Mods.Add(mod);
+            ModContext.Mods.Add(new WeakReference<NapCatSharp.Core.Mod>(mod));
         }
     }
 
@@ -28,6 +28,14 @@ public static class ModLoader
     /// </summary>
     internal static bool LoadMod(string modName)
     {
+        if(ModContext.Mods.Any(f => {
+            if(f.TryGetTarget(out var target)){
+                return target.ModName == modName;
+            }
+            return false;
+        }))
+            return true; // 已经存在
+
         var moddir = Path.Combine(ModContext.ModPath, modName);
         if (!Directory.Exists(moddir)) {
             return false; // 给定模组文件夹不存在
@@ -46,7 +54,7 @@ public static class ModLoader
             throw new Exception($"一个程序集只能包含一个Mod，但在{modName}中发现多个");
         }
         var mod = (NapCatSharp.Core.Mod)Activator.CreateInstance(modTypes[0])!;
-        ModContext.Mods.Add(mod);
+        ModContext.Mods.Add(new WeakReference<NapCatSharp.Core.Mod>(mod));
         return true;
     }
 
@@ -99,6 +107,7 @@ public static class ModLoader
     /// </summary>
     internal static async Task OverrideModFileAsync(string modName, string fileName, byte[] bytes)
     {
+        DisableMod(modName);
         var tarFileName = FileCreate(modName, fileName);
         var fileStream = File.Create(tarFileName);
         await fileStream.WriteAsync(bytes);
@@ -110,8 +119,9 @@ public static class ModLoader
     /// </summary>
     internal static async Task AppendModFileAsync(string modName, string fileName, byte[] bytes)
     {
+        DisableMod(modName);
         var tarFileName = FileCreate(modName, fileName);
-        var fileWrite = File.OpenWrite(tarFileName);
+        var fileWrite = /*File.OpenHandle(tarFileName, FileMode.Append, FileAccess.Write, FileShare.Write);*/File.OpenWrite(tarFileName);
         await fileWrite.WriteAsync(bytes);
         fileWrite.Dispose();
     }
@@ -123,8 +133,24 @@ public static class ModLoader
     /// </summary>
     internal static void DeleteModFiles(string modName, bool recursive = true)
     {
+        DisableMod(modName);
         var modDirName = Path.Combine(ModContext.ModPath, modName);
-        Directory.Delete(modDirName, recursive);
+        if (Directory.Exists(modDirName)) {
+            Directory.Delete(modDirName, recursive);
+        }
+    }
+
+    /// <summary>
+    /// 删除给定模组中的给定文件
+    /// </summary>
+    internal static void DeleteFile(string modName, string fileName)
+    {
+        DisableMod(modName);
+        var tarFileName = Path.Combine(ModContext.ModPath, modName, fileName);
+        var fileInfo = new FileInfo(tarFileName);
+        if (fileInfo.Exists) {
+            fileInfo.Delete();
+        }
     }
 
     /// <summary>
@@ -135,14 +161,24 @@ public static class ModLoader
     /// <returns></returns>
     internal static string FileCreate(string modName, string fileName)
     {
+        DisableMod(modName);
         var modDirName = Path.Combine(ModContext.ModPath, modName);
         var tarFileName = Path.Combine(modDirName, fileName);
         if (!Directory.Exists(modDirName)) {
             Directory.CreateDirectory(modDirName);
         }
         if (!File.Exists(tarFileName)) {
-            File.Create(tarFileName).Dispose();
+            using(var fs = File.Create(tarFileName)) {
+                _ = fs;
+            }
         }
         return tarFileName;
+    }
+
+    internal static long GetFileSize(string modName, string fileName)
+    {
+        var tarFileName = Path.Combine(ModContext.ModPath, modName, fileName);
+        var fileInfo = new FileInfo(tarFileName);
+        return fileInfo.Length;
     }
 }
