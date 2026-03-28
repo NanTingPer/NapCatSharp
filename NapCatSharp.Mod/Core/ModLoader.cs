@@ -19,7 +19,8 @@ public static class ModLoader
                 throw new Exception($"一个程序集只能包含一个Mod，但在{modName}中发现多个");
             }
             var mod = (NapCatSharp.Core.Mod)Activator.CreateInstance(modTypes[0])!;
-            ModContext.Mods.Add(new WeakReference<NapCatSharp.Core.Mod>(mod));
+            //ModContext.Mods.Add(new WeakReference<NapCatSharp.Core.Mod>(mod));
+            ModContext.Mods.Add(mod);
         }
     }
 
@@ -28,13 +29,16 @@ public static class ModLoader
     /// </summary>
     internal static bool LoadMod(string modName)
     {
-        if(ModContext.Mods.Any(f => {
-            if(f.TryGetTarget(out var target)){
-                return target.ModName == modName;
-            }
-            return false;
-        }))
-            return true; // 已经存在
+        //if(ModContext.Mods.Any(f => {
+        //    if(f.TryGetTarget(out var target)){
+        //        return target.ModName == modName;
+        //    }
+        //    return false;
+        //}))
+        //    return true; // 已经存在
+
+        if(ModContext.Mods.Any(f => modName.Equals(f.ModName)))
+            return true;
 
         var moddir = Path.Combine(ModContext.ModPath, modName);
         if (!Directory.Exists(moddir)) {
@@ -54,7 +58,8 @@ public static class ModLoader
             throw new Exception($"一个程序集只能包含一个Mod，但在{modName}中发现多个");
         }
         var mod = (NapCatSharp.Core.Mod)Activator.CreateInstance(modTypes[0])!;
-        ModContext.Mods.Add(new WeakReference<NapCatSharp.Core.Mod>(mod));
+        //ModContext.Mods.Add(new WeakReference<NapCatSharp.Core.Mod>(mod));
+        ModContext.Mods.Add(mod);
         return true;
     }
 

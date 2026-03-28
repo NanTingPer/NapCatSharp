@@ -23,7 +23,7 @@ public static class ServiceCollectionExtension
         ModLoader.LoadMods();
         var modManager = new ModManager(ModContext.Mods);
             services
-            .AddSingleton<List<WeakReference<NapCatSharp.Core.Mod>>>(ModContext.Mods)
+            .AddSingleton(ModContext.Mods)
             .AddSingleton<ModManager>(modManager)
             .AddSingleton<SocketRegionService>()
             .AddHostedService<SocketRegionService>(sp =>

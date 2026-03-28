@@ -23,7 +23,9 @@
              * @@type { string }
              */
             let st = await appendModFile(modName, fileList);
-            
+            if(st == "上传成功") {
+                this.reloadList();
+            }
             alert(st);
         };
         async function reloadList() {

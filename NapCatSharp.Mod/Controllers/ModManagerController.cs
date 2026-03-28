@@ -101,7 +101,7 @@ public class ModManagerController(ModManager manager) : ControllerBase
         }
         var fileBytes = Convert.FromBase64String(input.Base64);
         await ModLoader.AppendModFileAsync(modName, fileName, fileBytes);
-        if (isEnd) {
+        if (isEnd) { 
             var endFileSize = ModLoader.GetFileSize(modName, fileName);
             if (endFileSize != fileSize) {
                 ModLoader.DeleteFile(modName, fileName);

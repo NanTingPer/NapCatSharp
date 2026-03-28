@@ -64,7 +64,6 @@ async function flushToken(password = "") {
  */
 async function fetchPost(url, body, recount = 1) {
     let count = 0;
-    console.log(body)
     do {
         let response = await fetch(`${window.apiUrl}${url}`, 
         { 

@@ -8,8 +8,9 @@ namespace NapCatSharp.Mod.Core;
 
 public class ModManager
 {
-    public List<WeakReference<NapCatSharp.Core.Mod>> Mods { get; set; }
-    public ModManager(List<WeakReference<NapCatSharp.Core.Mod>> mods)
+    //public List<WeakReference<NapCatSharp.Core.Mod>> Mods { get; set; }
+    public List<NapCatSharp.Core.Mod> Mods { get; set; }
+    public ModManager(List<NapCatSharp.Core.Mod>/*List<WeakReference<NapCatSharp.Core.Mod>>*/ mods)
     {
         Mods = mods;
     }
@@ -17,49 +18,56 @@ public class ModManager
     {
         if (eventBaseModel.EventData is not Lifecycle lifecycle) return;
         for (int i = 0; i < Mods.Count; i++) {
-            if (Mods[i].TryGetTarget(out var target)) target.MetaLifecycle(lifecycle);
+            //if (Mods[i].TryGetTarget(out var target)) target.MetaLifecycle(lifecycle);
+            Mods[i].MetaLifecycle(lifecycle);
         }
     }
     public void MetaHeartbeat(EventMessageData eventBaseModel)
     {
         if (eventBaseModel.EventData is not Heartbeat heartbeat) return;
         for (int i = 0; i < Mods.Count; i++) {
-            if (Mods[i].TryGetTarget(out var target)) target.MetaHeartbeat(heartbeat);
+            //if (Mods[i].TryGetTarget(out var target)) target.MetaHeartbeat(heartbeat);
+            Mods[i].MetaHeartbeat(heartbeat);
         }
     }
     public void MessagePrivate(EventMessageData eventBaseModel)
     {
         if (eventBaseModel.EventData is not PrivateMessage message) return;
         for (int i = 0; i < Mods.Count; i++) {
-            if (Mods[i].TryGetTarget(out var target)) target.MessagePrivate(message);
+            //if (Mods[i].TryGetTarget(out var target)) target.MessagePrivate(message);
+            Mods[i].MessagePrivate(message);
         }
     }
     public void MessageGroup(EventMessageData eventBaseModel)
     {
         if (eventBaseModel.EventData is not GroupMessage message) return;
         for (int i = 0; i < Mods.Count; i++) {
-            if (Mods[i].TryGetTarget(out var target)) target.MessageGroup(message);
+            //if (Mods[i].TryGetTarget(out var target)) target.MessageGroup(message);
+            Mods[i].MessageGroup(message);
         }
     }
     public void RequestFriend(EventMessageData eventBaseModel)
     {
         if (eventBaseModel.EventData is not AddFriend request) return;
         for (int i = 0; i < Mods.Count; i++) {
-            if (Mods[i].TryGetTarget(out var target)) target.RequestFriend(request);
+            //if (Mods[i].TryGetTarget(out var target)) target.RequestFriend(request);
+            Mods[i].RequestFriend(request);
         }
     }
     public void RequestGroup(EventMessageData eventBaseModel)
     {
         if (eventBaseModel.EventData is not AddGroup request) return;
         for (int i = 0; i < Mods.Count; i++) {
-            if (Mods[i].TryGetTarget(out var target)) target.RequestGroup(request);
+            //if (Mods[i].TryGetTarget(out var target)) target.RequestGroup(request);
+            Mods[i].RequestGroup(request);
         }
     }
     public void MessageSentSelf(EventMessageData eventBaseModel)
     {
         if (eventBaseModel.EventData is not Self self) return;
         for (int i = 0; i < Mods.Count; i++) {
-            if (Mods[i].TryGetTarget(out var target)) target.MessageSentSelf(self);
+            //if (Mods[i].TryGetTarget(out var target)) target.MessageSentSelf(self);
+            Mods[i].MessageSentSelf(self);
         }
     }
 }
