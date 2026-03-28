@@ -1,15 +1,54 @@
-﻿namespace NapCatSharp.Mod.Core;
+﻿using System.Text;
+using System.Text.Json;
+
+namespace NapCatSharp.Mod.Core;
 
 public static class ModLoader
 {
+    public static string ModEnableConfigPath => Path.Combine(ModContext.ModPath, "enable.json");
+    private readonly static Lock modenablelock = new();
+    /// <summary>
+    /// 模组启用列表
+    /// </summary>
+    public static List<string> EnableModList
+    {
+        get
+        {
+            string value;
+            lock (modenablelock) {
+                try {
+                    if (!File.Exists(ModEnableConfigPath)) {
+                        File.WriteAllText(ModEnableConfigPath, "[]");
+                    }
+                    value = File.ReadAllText(ModEnableConfigPath, Encoding.UTF8);
+                } finally{
+                }
+            }
+            return JsonSerializer.Deserialize<List<string>>(value) ?? [];
+        }
+        
+    }
+    
+    /// <summary>
+    /// 写入模组启用列表
+    /// </summary>
+    internal static void WriteEnableModList(List<string> enableList)
+    {
+        lock (modenablelock) {
+            try {
+                File.WriteAllText(ModEnableConfigPath, JsonSerializer.Serialize(enableList));
+            } finally {
+            }
+        }
+    }
+
     /// <summary>
     /// 加载全部模组
     /// </summary>
     internal static void LoadMods()
     {
         // 仅包含名称
-        var validModNames = LocalMods();
-
+        var validModNames = EnableModList.Intersect(LocalMods());
         foreach (var modName in validModNames) {
             var context = new ModContext(modName);
             var modAssembly = context.LoadFromAssemblyPath(context.assemblyPath);
@@ -19,7 +58,6 @@ public static class ModLoader
                 throw new Exception($"一个程序集只能包含一个Mod，但在{modName}中发现多个");
             }
             var mod = (Mod)Activator.CreateInstance(modTypes[0])!;
-            //ModContext.Mods.Add(new WeakReference<NapCatSharp.Core.Mod>(mod));
             ModContext.Mods.Add(mod);
         }
     }
@@ -29,14 +67,6 @@ public static class ModLoader
     /// </summary>
     internal static bool LoadMod(string modName)
     {
-        //if(ModContext.Mods.Any(f => {
-        //    if(f.TryGetTarget(out var target)){
-        //        return target.ModName == modName;
-        //    }
-        //    return false;
-        //}))
-        //    return true; // 已经存在
-
         if(ModContext.Mods.Any(f => modName.Equals(f.ModName)))
             return true;
 
@@ -58,8 +88,10 @@ public static class ModLoader
             throw new Exception($"一个程序集只能包含一个Mod，但在{modName}中发现多个");
         }
         var mod = (Mod)Activator.CreateInstance(modTypes[0])!;
-        //ModContext.Mods.Add(new WeakReference<NapCatSharp.Core.Mod>(mod));
         ModContext.Mods.Add(mod);
+        var newlist = EnableModList.ToHashSet();
+        newlist.Add(mod.ModName);
+        WriteEnableModList([.. newlist]);
         return true;
     }
 
@@ -105,6 +137,9 @@ public static class ModLoader
     internal static void DisableMod(string modName)
     {
         ModContext.UnLoadMod(modName);
+        var newlist = EnableModList.ToHashSet();
+        newlist.Remove(modName);
+        WriteEnableModList([..  newlist]);
     }
 
     /// <summary>

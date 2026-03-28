@@ -16,9 +16,9 @@ public class SocketController(NapCatSocketManager manager, IConfiguration config
     /// </summary>
     /// <param name="model"></param>
     /// <returns></returns>
-    [HttpPost("create")]
     [JWT]
-    public IActionResult CreateSocket([FromBody] CreateSocketModel model)
+    [HttpPost("create")]
+    public IActionResult CreateSocket([FromBody] CreateSocketInput model)
     {
         Uri? uri = null;
         try {
@@ -33,7 +33,7 @@ public class SocketController(NapCatSocketManager manager, IConfiguration config
     }
 }
 
-public class CreateSocketModel
+public class CreateSocketInput
 {
     /// <summary>
     /// 链接名称
