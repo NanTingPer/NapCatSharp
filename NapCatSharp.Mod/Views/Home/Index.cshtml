@@ -4,41 +4,16 @@
 
 <div class="text-center">
     <h1 class="display-4">Welcome</h1>
-    <script src="~/lib/jsencrypt/jsencrypt.js"></script>
-    <script src="~/js/site.js"></script>
+    <!-- <script src="~/js/site.js"></script> -->
     <script>
         async function login() {
-            /**
-             *  按照流程
-             *  - 先获取公钥 -> 会返回requestid 登录时使用
-             *  - 使用公钥加密密钥
-             *  - 使用加密后的密码登录，需要传入 requestid
-             *  - 登录后返回jwt
-             */
             let passValue = document.getElementById("pass").value;
-            let pkresponse = await fetch(`${window.apiUrl}login/publicKey`,{
-                method: "POST"
-            });
-            if(!(pkresponse.status == 200)){
-                return;
+            passValue = (new String(passValue)).trim();
+            console.log(passValue);
+            localStorage['password'] = passValue; // cache密码
+            if (await flushToken(passValue)) {
+                window.location.href = `${window.apiUrl}Home/ModManager`
             }
-            let obj = await pkresponse.json();
-            let ps = await encryptedPassword(passValue, obj.publicKey);
-            let jwtResponse = await fetch(`${window.apiUrl}login/login`, {
-                method: "POST",
-                body: JSON.stringify({password: ps, requestId: obj.requestId}),
-                headers: {
-                    "Content-Type" : "application/json"
-                }
-            });
-            if (!(jwtResponse.status == 200)){
-                return;
-            }
-            alert("登录成功");
-            let jwt = (await jwtResponse.json()).token;
-            localStorage['jwt'] = jwt;
-            console.log(`${window.apiUrl}Home/ModManager`);
-            window.location.href = `${window.apiUrl}Home/ModManager`
         }
     </script>
     <form>

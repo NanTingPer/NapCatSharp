@@ -8,18 +8,6 @@
     <h2>本地模组列表</h2>
     <div id="localModList"></div>
     <script>
-        async function fetchPost(url, body = undefined) {
-            return await fetch(`${window.apiUrl}${url}`, 
-                { 
-                    method: "POST",
-                    body: body,
-                    headers: {
-                        "Content-Type" : "application/json",
-                        "Authorization" : ` ${localStorage['jwt']}`
-                    }
-                }
-            );
-        }
         async function reloadList() {
             await modList();
             await localModList();

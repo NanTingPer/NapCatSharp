@@ -13,7 +13,7 @@ public class JWTAttribute : Attribute
     public async Task<bool> OnAuthorizationAsync(HttpContext/*AuthorizationFilterContext*/ context)
     {
 #if DEBUG
-        return true;
+        //return true;
 #endif
         // view 没有终结点
 #pragma warning disable CS0162 // 检测到无法访问的代码
@@ -75,7 +75,7 @@ public class JWTAttribute : Attribute
         var jwtTokenDesc = new SecurityTokenDescriptor()
         {
             SigningCredentials = signingCredentials,
-            Expires = DateTime.UtcNow.AddMinutes(10),
+            Expires = DateTime.UtcNow.AddMinutes(10), //todo 测试2秒
             NotBefore = DateTime.UtcNow
         };
         return handler.CreateToken(jwtTokenDesc);
