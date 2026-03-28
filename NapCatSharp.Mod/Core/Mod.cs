@@ -3,7 +3,7 @@ using NapCatSharp.EventPushModels.MessageSentEvents;
 using NapCatSharp.EventPushModels.MetaEvents;
 using NapCatSharp.EventPushModels.RequestEvents;
 
-namespace NapCatSharp.Core;
+namespace NapCatSharp.Mod.Core;
 
 public abstract class Mod
 {

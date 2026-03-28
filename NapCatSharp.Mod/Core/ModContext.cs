@@ -7,7 +7,7 @@ namespace NapCatSharp.Mod.Core;
 
 public class ModContext : AssemblyLoadContext
 {
-    internal readonly static List<NapCatSharp.Core.Mod/*WeakReference<NapCatSharp.Core.Mod>*/> Mods = [];
+    internal readonly static List<Mod/*WeakReference<NapCatSharp.Core.Mod>*/> Mods = [];
     /// <summary> 所以Mod的根目录 </summary>
     public readonly static string ModPath = Path.Combine(AppContext.BaseDirectory, "Mods");
     internal readonly static ConcurrentDictionary<string, Assembly/*WeakReference<Assembly>*/> ModAssemblys = [];

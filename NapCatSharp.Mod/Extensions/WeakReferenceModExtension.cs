@@ -2,7 +2,7 @@
 
 public static class WeakReferenceModExtension
 {
-    extension(WeakReference<NapCatSharp.Core.Mod> modWeakRef)
+    extension(WeakReference<Core.Mod> modWeakRef)
     {
         public string ModName
         {

@@ -5,10 +5,6 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\NapCatSharp.Core\NapCatSharp.csproj" />
-  </ItemGroup>
   <Target Name="BeforeBuild">
     <Copy SourceFiles="bin\Debug\net10.0\TestMod.dll" DestinationFiles="..\NapCatSharp.Mod\bin\Debug\net10.0\Mods\TestMod\TestMod.dll"></Copy>
   </Target>
@@ -19,7 +15,9 @@
           <ModDest>$(SolutionDir)NapCatSharp.Mod\bin\$(Configuration)\net10.0\Mods\$(ProjectName)</ModDest>
       </PropertyGroup>
       <MakeDir Directories="$(ModDest)" />
-      <Copy SourceFiles="$(TargetDir)$(ProjectName).dll;$(TargetDir)$(ProjectName).pdb" 
-            DestinationFolder="$(ModDest)" />
+      <Copy SourceFiles="$(TargetDir)$(ProjectName).dll;$(TargetDir)$(ProjectName).pdb" DestinationFolder="$(ModDest)" />
   </Target>
+  <ItemGroup>
+    <ProjectReference Include="..\NapCatSharp.Mod\NapCatSharp.Mod.csproj" />
+  </ItemGroup>
 </Project>

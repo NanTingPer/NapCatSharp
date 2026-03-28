@@ -1,5 +1,5 @@
-﻿using NapCatSharp.Core;
-using NapCatSharp.EventPushModels.MetaEvents;
+﻿using NapCatSharp.EventPushModels.MetaEvents;
+using NapCatSharp.Mod.Core;
 
 namespace TestMod;
 
