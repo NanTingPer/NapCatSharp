@@ -30,7 +30,6 @@ async function flushToken(password = "") {
     } else {
         usePassword = password;
     }
-    console.log("密码: " + usePassword);
     let pkresponse = await fetch(`${window.apiUrl}login/publicKey`,{
         method: "POST"
     });

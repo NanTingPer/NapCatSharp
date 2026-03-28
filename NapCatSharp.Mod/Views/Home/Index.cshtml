@@ -10,7 +10,6 @@
             let passValue = document.getElementById("pass").value;
             passValue = (new String(passValue)).trim();
             sessionStorage['password'] = passValue;
-            console.log(passValue);
             if (await flushToken(passValue)) {
                 window.location.href = `${window.apiUrl}Home/ModManager`
             }
