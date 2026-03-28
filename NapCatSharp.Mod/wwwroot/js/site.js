@@ -26,7 +26,7 @@ async function flushToken(password = "") {
      */
     let usePassword = "";
     if (password == "") {
-        usePassword = localStorage['password'];
+        usePassword = sessionStorage['password'];
     } else {
         usePassword = password;
     }

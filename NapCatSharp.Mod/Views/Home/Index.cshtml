@@ -9,8 +9,8 @@
         async function login() {
             let passValue = document.getElementById("pass").value;
             passValue = (new String(passValue)).trim();
+            sessionStorage['password'] = passValue;
             console.log(passValue);
-            localStorage['password'] = passValue; // cache密码
             if (await flushToken(passValue)) {
                 window.location.href = `${window.apiUrl}Home/ModManager`
             }
