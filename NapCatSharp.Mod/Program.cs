@@ -1,9 +1,27 @@
-﻿using NapCatSharp.Mod.Extensions;
+﻿using NapCatSharp.Mod.Core;
+using NapCatSharp.Mod.Extensions;
 using NapCatSharp.Mod.Middlewares;
+using NapCatSharp.Mod.Services;
+using Serilog;
+using System.Text;
+
+#region Log
+var logsBaseDir = Path.Combine(AppContext.BaseDirectory, "logs");
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .WriteTo.File(path: Path.Combine(logsBaseDir, "waring.log"), restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Warning, encoding: Encoding.UTF8)
+    .WriteTo.File(path: Path.Combine(logsBaseDir, "debug.log"), restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Debug, encoding: Encoding.UTF8)
+    .WriteTo.File(path: Path.Combine(logsBaseDir, "error.log"), restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Error, encoding: Encoding.UTF8)
+    .WriteTo.File(path: Path.Combine(logsBaseDir, "info.log"), restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Information, encoding: Encoding.UTF8)
+    .CreateLogger();
+#endregion
 
 var builder = WebApplication.CreateBuilder(args);
-
 builder.AddServiceDefaults();
+builder.Services.AddSerilog(Log.Logger);
+var sl = new SystemLogger();
+ModLoader.logger = sl;
+builder.Services.AddSingleton<SystemLogger>(sl);
 builder.Services
     .AddNapCatSharpServices()
     .AddControllers()
@@ -17,7 +35,6 @@ builder.Services
     .AddSingleton<JWTMiddleware>()
     //.AddAuthentication()
     ;
-
 var app = builder.Build();
 app.UseCors(cors => {
         cors.AllowAnyHeader()

@@ -1,10 +1,13 @@
-﻿using System.Text;
+﻿using NapCatSharp.Mod.Services;
+using Serilog.Core;
+using System.Text;
 using System.Text.Json;
 
 namespace NapCatSharp.Mod.Core;
 
 public static class ModLoader
 {
+    public static SystemLogger logger = null!;
     public static string ModEnableConfigPath => Path.Combine(ModContext.ModPath, "enable.json");
     private readonly static Lock modenablelock = new();
     /// <summary>
@@ -49,17 +52,23 @@ public static class ModLoader
     {
         // 仅包含名称
         var validModNames = EnableModList.Intersect(LocalMods());
-        foreach (var modName in validModNames) {
-            var context = new ModContext(modName);
-            var modAssembly = context.LoadFromAssemblyPath(context.assemblyPath);
-            var modTypes = modAssembly.GetModTypes();
-            if(modTypes.Length != 1) {
-                context.Unload();
-                throw new Exception($"一个程序集只能包含一个Mod，但在{modName}中发现多个");
-            }
-            var mod = (Mod)Activator.CreateInstance(modTypes[0])!;
-            ModContext.Mods.Add(mod);
+        foreach (var item in validModNames) {
+            LoadMod(item);
         }
+        //foreach (var modName in validModNames) {
+        //    logger.Info($"加载模组: {modName}");
+        //    var context = new ModContext(modName);
+        //    var modAssembly = context.LoadFromAssemblyPath(context.assemblyPath);
+        //    var modTypes = modAssembly.GetModTypes();
+        //    if(modTypes.Length != 1) {
+        //        context.Unload();
+        //        logger.Error($"模组加载失败: {modName}, 一个程序集只能包含一个Mod，但在{modName}中发现多个");
+        //        throw new Exception($"一个程序集只能包含一个Mod，但在{modName}中发现多个");
+        //    }
+        //    logger.Info($"创建实例: {modName}");
+        //    var mod = (Mod)Activator.CreateInstance(modTypes[0])!;
+        //    ModContext.Mods.Add(mod);
+        //}
     }
 
     /// <summary>
@@ -69,14 +78,16 @@ public static class ModLoader
     {
         if(ModContext.Mods.Any(f => modName.Equals(f.ModName)))
             return true;
-
+        logger.Info($"加载模组: {modName}");
         var moddir = Path.Combine(ModContext.ModPath, modName);
         if (!Directory.Exists(moddir)) {
+            logger.Error($"模组文件夹不存在: {modName}");
             return false; // 给定模组文件夹不存在
         }
 
         var files = Directory.GetFiles(moddir);
         if(!files.Any(file => Path.GetFileName(file).Replace(".dll", "") == modName)) {
+            logger.Error($"模组文件夹中找不到主程序集: {moddir}/{modName}");
             return false; // 给定模组文件夹中找不到主程序集 (要与Mod名称一致)
         }
 
@@ -85,9 +96,11 @@ public static class ModLoader
         var modTypes = modAssembly.GetModTypes();
         if (modTypes.Length != 1) {
             context.Unload();
+            logger.Error($"模组加载失败: {modName}, 一个程序集只能包含一个Mod，但在{modName}中发现多个");
             throw new Exception($"一个程序集只能包含一个Mod，但在{modName}中发现多个");
         }
         var mod = (Mod)Activator.CreateInstance(modTypes[0])!;
+        logger.Info($"创建实例: {modName}");
         ModContext.Mods.Add(mod);
         var newlist = EnableModList.ToHashSet();
         newlist.Add(mod.ModName);
@@ -123,6 +136,7 @@ public static class ModLoader
     internal static bool ReLoadMod(string modName)
     {
         try {
+            logger.Info($"重新加载模组: {modName}");
             ModContext.UnLoadMod(modName);
             LoadMod(modName);
         } catch {
@@ -136,6 +150,7 @@ public static class ModLoader
     /// </summary>
     internal static void DisableMod(string modName)
     {
+        logger.Info($"禁用模组: {modName}");
         ModContext.UnLoadMod(modName);
         var newlist = EnableModList.ToHashSet();
         newlist.Remove(modName);
@@ -147,6 +162,7 @@ public static class ModLoader
     /// </summary>
     internal static async Task OverrideModFileAsync(string modName, string fileName, byte[] bytes)
     {
+        logger.Info($"覆盖模组文件: {modName} {fileName}");
         DisableMod(modName);
         var tarFileName = FileCreate(modName, fileName);
         var fileStream = File.Create(tarFileName);
@@ -159,6 +175,7 @@ public static class ModLoader
     /// </summary>
     internal static async Task AppendModFileAsync(string modName, string fileName, byte[] bytes)
     {
+        logger.Info($"追加模组文件: {modName} {fileName}");
         DisableMod(modName);
         var tarFileName = FileCreate(modName, fileName);
         var fileWrite = /*File.OpenHandle(tarFileName, FileMode.Append, FileAccess.Write, FileShare.Write);*/File.OpenWrite(tarFileName);
@@ -173,6 +190,7 @@ public static class ModLoader
     /// </summary>
     internal static void DeleteModFiles(string modName, bool recursive = true)
     {
+        logger.Info($"删除模组: {modName} ");
         DisableMod(modName);
         var modDirName = Path.Combine(ModContext.ModPath, modName);
         if (Directory.Exists(modDirName)) {
@@ -185,6 +203,7 @@ public static class ModLoader
     /// </summary>
     internal static void DeleteFile(string modName, string fileName)
     {
+        logger.Info($"删除模组文件: {modName} {fileName}");
         DisableMod(modName);
         var tarFileName = Path.Combine(ModContext.ModPath, modName, fileName);
         var fileInfo = new FileInfo(tarFileName);
@@ -201,6 +220,7 @@ public static class ModLoader
     /// <returns></returns>
     internal static string FileCreate(string modName, string fileName)
     {
+        logger.Info($"创建模组文件: {modName} {fileName}");
         DisableMod(modName);
         var modDirName = Path.Combine(ModContext.ModPath, modName);
         var tarFileName = Path.Combine(modDirName, fileName);
@@ -217,6 +237,7 @@ public static class ModLoader
 
     internal static long GetFileSize(string modName, string fileName)
     {
+        logger.Info($"获取文件大小: {modName} {fileName}");
         var tarFileName = Path.Combine(ModContext.ModPath, modName, fileName);
         var fileInfo = new FileInfo(tarFileName);
         return fileInfo.Length;

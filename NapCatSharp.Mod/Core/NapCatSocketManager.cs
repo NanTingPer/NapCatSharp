@@ -1,9 +1,9 @@
 ﻿using NapCatSharp.Core;
 using NapCatSharp.Mod.ConfigEntitys;
 using NapCatSharp.Mod.Services;
+using Serilog;
 using System.Collections.Concurrent;
 using System.Text.Json;
-using System.Xml.Linq;
 
 namespace NapCatSharp.Mod.Core;
 
@@ -42,11 +42,14 @@ public class NapCatSocketManager
             }
         }
     }
-    private SocketRegionService region;
-    public NapCatSocketManager(SocketRegionService service)
+    private readonly SocketRegionService region;
+    private readonly SystemLogger logger;
+    public NapCatSocketManager(SocketRegionService service, SystemLogger log)
     {
         region = service;
+        logger = log;
         if (!File.Exists(socketListConfigPath)) {
+            logger.Info("Socket配置文件不存在，创建。");
             if (!Directory.Exists(configDir)) {
                 Directory.CreateDirectory(configDir);
             }
@@ -56,6 +59,7 @@ public class NapCatSocketManager
         }
         foreach (var item in Configs.Where(f => f.IsEnable == true)) {
             try {
+                logger.Info($"启用Socket: {item.Name} {item.Uri}");
                 Enable(item);
             } catch{}
         }
@@ -75,6 +79,7 @@ public class NapCatSocketManager
         var c = Configs;
         var entity = c.FirstOrDefault(f => f.Name == name);
         if(entity != null) {
+            logger.Info($"禁用Socket: {entity.Name} {entity.Uri}");
             entity.IsEnable = false;
             Configs = c;
         }
@@ -100,6 +105,7 @@ public class NapCatSocketManager
             Password = entity.Password
         };
         NapCatSockets.TryAdd(entity.Name, socket);
+        logger.Info($"启用Socket: {entity.Name} {entity.Uri}");
         region.Enqueue(new QueueSocketTask(
             socket,
             connectionErrorCall: ErrorCallRemove,
@@ -172,7 +178,7 @@ public class NapCatSocketManager
     /// <summary>
     /// 将内容添加到配置
     /// </summary>
-    private static void AddConfig(SocketEntity entity)
+    private void AddConfig(SocketEntity entity)
     {
         var c = Configs;
         c.Add(entity);
@@ -182,23 +188,26 @@ public class NapCatSocketManager
     /// <summary>
     /// 删除给定配置
     /// </summary>
-    private static void DeleteConfig(string name)
+    private void DeleteConfig(string name)
     {
         var c = Configs;
         int count = c.RemoveAll(f => f.Name == name);
         if(count == 0) return;
         Configs = c;
+        logger.Info($"删除Socket: {name}");
     }
 
     private Task ErrorCallReConnection(SocketRegionService region, NapCatHttpSocket socket, Exception e)
     {
         region.ReConnection(new QueueSocketTask(socket, ErrorCallRemove, ErrorCallRemove));
+        logger.Info($"重连Socket: {socket.Uri}");
         return Task.CompletedTask;
     }
 
     private Task ErrorCallRemove(SocketRegionService region, NapCatHttpSocket socket, Exception e)
     {
         Close(socket);
+        logger.Error($"Socket错误: {socket.Uri} {e.Message} \r\n {e.StackTrace}");
         return Task.CompletedTask;
     }
 
