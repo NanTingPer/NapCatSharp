@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using NapCatSharp.Core;
+using System.Text.Json.Serialization;
 
 namespace NapCatSharp.Mod.ConfigEntitys;
 
@@ -15,4 +16,15 @@ public class SocketEntity
 
     [JsonPropertyName("isEnable")]
     public bool IsEnable { get; set; } = false;
+
+    public static SocketEntity Create(string name, NapCatHttpSocket socket)
+    {
+        return new SocketEntity()
+        {
+             IsEnable = true,
+             Name = name,
+             Password = socket.Password ?? "",
+             Uri = socket.Uri.ToString()
+        };
+    }
 }

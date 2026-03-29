@@ -29,6 +29,7 @@ public static class ServiceCollectionExtension
             .AddHostedService<SocketRegionService>(sp =>
                 sp.GetService<SocketRegionService>()!)
             .AddSingleton<NapCatSocketManager>()
+            .AddHostedService<WarmupService>()
             ;
             //.AddHostedService<SocketRecive>()
         return services;

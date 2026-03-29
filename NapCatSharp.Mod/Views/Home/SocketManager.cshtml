@@ -4,6 +4,8 @@
 <div>
     <script src="/js/socketManager.js"></script>
     <h1> 欢迎访问链接管理器 </h1>
+    <hr>
+    <h2>创建链接</h2>
     <table>
         <tr>
             <td> socket名称 </td>
@@ -22,9 +24,30 @@
             <td> <input type="button" id="tj" value="创建" onclick="createSocket()"></td>
         </tr>
     </table>
-    <div id="list"></div>
+    <hr>
+    <h2>已启用列表</h2>
+    <div id="enableList"></div>
+    <hr>
+    <h2>已禁用列表</h2>
+    <div id="disableList"></div>
     <script>
-        async function renderList() {
+        /**
+         * @@param { { name: string, uri: string, password: string, isEnable: boolean }[] } values 
+         */
+        function renderValue(values) {
+            let html = `<table border-collapse="separate" style="border-spacing: 10px 5px;">`;
+            values.forEach(s => {
+                html += `<tr> <td style="padding: 10px;">`;
+                html += `${s.name}</td><td style="padding: 10px;">`;
+                html += `${s.uri}</td><td style="padding: 10px;">`;
+                html += `<input type="button" value="${s.isEnable ? "禁用" : "启用"}" onclick="${s.isEnable ? "disable" : "enable"}('${s.name}');renderEnableList();renderDisableList();" </td><td style="padding: 10px;">`; //${s.password}
+                html += `<input type="button" value="删除" onclick="deleted('${s.name}');renderEnableList();renderDisableList();"</td>`;
+                html += `</tr>`;
+            })
+            html += `</table>`;
+            return html
+        }
+        async function renderEnableList() {
             /**
              * @@type { { name: string, uri: string, password: string, isEnable: boolean }[] | undefined }
              */
@@ -33,16 +56,15 @@
                 return;
             }
 
-            let html = `<table border-collapse="separate" style="border-spacing: 10px 5px;">`;
-            let listElement = document.getElementById('list');
-            list.forEach(s => {
-                html += `<tr> <td style="padding: 10px;">`;
-                html += `${s.name}</td><td style="padding: 10px;">`;
-                html += `${s.uri}</td><td style="padding: 10px;">`;
-                html += `<input type="button" value="链接" onclick="create(${s.name}, ${s.uri}, ${s.password})" </td>`; //${s.password}
-                html += `</tr>`;
-            })
-            html += `</table>`;
+            let listElement = document.getElementById('enableList');
+            let html = renderValue(list);
+            listElement.innerHTML = html;
+        }
+        async function renderDisableList() {
+            let list = await disableList();
+            if(list == undefined) return;
+            let listElement = document.getElementById('disableList');
+            let html = renderValue(list);
             listElement.innerHTML = html;
         }
         async function createSocket() {
@@ -57,7 +79,11 @@
             }
             await create(elements.name.value, elements.url.value, elements.password.value);
             Object.keys(elements).forEach(k => elements[k].value = "");
-            renderList();
+            renderEnableList();
+            renderDisableList();
         }
+        renderEnableList();
+        renderDisableList();
+        setInterval(() => { this.renderDisableList(); this.renderEnableList() }, 5000); // 5s
     </script>
 </div>

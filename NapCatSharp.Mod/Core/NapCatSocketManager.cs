@@ -2,45 +2,138 @@
 using NapCatSharp.Mod.ConfigEntitys;
 using NapCatSharp.Mod.Services;
 using System.Collections.Concurrent;
+using System.Text.Json;
+using System.Xml.Linq;
 
 namespace NapCatSharp.Mod.Core;
 
 /// <summary>
 /// 1. <see cref="NapCatSocketManager"/> 用于在Web / 控制器中创建Socket <br/>
-/// - <see cref="NapCatSocketManager.CreateSocket(string, Uri, string, out Exception?)"/> 只负责创建实例，对于链接以及事件订阅，会加入到
+/// - <see cref="NapCatSocketManager.Create(string, Uri, string, out Exception?)"/> 只负责创建实例，对于链接以及事件订阅，会加入到
 /// <see cref="SocketRegionService"/>的队列中 <br/>
-/// 2. <see cref="NapCatSocketManager.RemoveSocket(string)"/> 会同时释放socket链接
+/// 2. <see cref="NapCatSocketManager.Disable(string)"/> 会同时释放socket链接
 /// </summary>
 file class Note{}
 
 public class NapCatSocketManager
 {
+    public static readonly string socketListConfigPath = Path.Combine(AppContext.BaseDirectory, "appconfigs", "sockets.json");
+    public static readonly string configDir = Path.Combine(AppContext.BaseDirectory, "appconfigs");
+    private static readonly Lock configtouringLock = new Lock();
+    public static List<SocketEntity> Configs
+    {
+        get
+        {
+            string? configValue = null;
+            lock (configtouringLock) {
+                try {
+                    configValue = File.ReadAllText(socketListConfigPath);
+                } catch{}
+            }
+            return JsonSerializer.Deserialize<List<SocketEntity>>(configValue ?? "[]") ?? [];
+        }
+        set
+        {
+            var jsonv = JsonSerializer.Serialize(value.ToHashSet());
+            lock (configtouringLock) {
+                try {
+                    File.WriteAllText(socketListConfigPath ,jsonv ?? "[]");
+                } catch{}
+            }
+        }
+    }
     private SocketRegionService region;
     public NapCatSocketManager(SocketRegionService service)
     {
         region = service;
+        if (!File.Exists(socketListConfigPath)) {
+            if (!Directory.Exists(configDir)) {
+                Directory.CreateDirectory(configDir);
+            }
+            var str = File.CreateText(socketListConfigPath);
+            str.WriteLine("[]");
+            str.Dispose();
+        }
+        foreach (var item in Configs.Where(f => f.IsEnable == true)) {
+            try {
+                Enable(item);
+            } catch{}
+        }
     }
     /// <summary>
     /// key是socket的名称
     /// </summary>
     internal readonly ConcurrentDictionary<string, NapCatHttpSocket> NapCatSockets = [];
-    public bool RemoveSocket(string name)
+    /// <summary>
+    /// 关闭socket
+    /// </summary>
+    public void Disable(string name)
     {
         if(NapCatSockets.TryRemove(name, out var s)) {
             s.Stop();
-            return true;
         }
-        return false;
+        var c = Configs;
+        var entity = c.FirstOrDefault(f => f.Name == name);
+        if(entity != null) {
+            entity.IsEnable = false;
+            Configs = c;
+        }
     }
 
-    public bool RemoveSocket(NapCatHttpSocket socket)
+    /// <summary>
+    /// 关闭socket
+    /// </summary>
+    public void Close(NapCatHttpSocket socket)
     {
         foreach (var kv in NapCatSockets.ToArray()) {
             if(kv.Value == socket) {
-                return RemoveSocket(kv.Key);
+                Disable(kv.Key);
             }
         }
-        return false;
+    }
+
+    public void Enable(SocketEntity entity)
+    {
+        var socket = new NapCatHttpSocket()
+        {
+            Uri = new Uri(entity.Uri),
+            Password = entity.Password
+        };
+        NapCatSockets.TryAdd(entity.Name, socket);
+        region.Enqueue(new QueueSocketTask(
+            socket,
+            connectionErrorCall: ErrorCallRemove,
+            reciveErrorCall: ErrorCallReConnection)); // 这里可以添加错误回调
+    }
+
+    public void Enable(string name, string uri, string? password)
+    {
+        var entity  =new SocketEntity()
+        {
+             Name = name,
+             Uri = uri,
+             Password = password ?? ""
+        };
+        Enable(entity);
+    }
+
+    public void Enable(string name)
+    {
+        var entity = Configs.FirstOrDefault(f => f.Name == name);
+        if(entity != null) {
+            Enable(entity);
+        }
+    }
+
+    /// <summary>
+    /// 关闭socket并删除配置
+    /// </summary>
+    public void Delete(string name)
+    {
+        if(NapCatSockets.TryGetValue(name, out var value)) {
+            Close(value);
+        }
+        DeleteConfig(name);
     }
 
     /// <summary>
@@ -51,30 +144,50 @@ public class NapCatSocketManager
     /// <param name="password"> socket链接密码 </param>
     /// <param name="exception"> 如果创建失败，如uri无效， 则抛出</param>
     /// <returns> 如果创建成功返回true, 如果创建失败返回false </returns>
-    public bool CreateSocket(string name, Uri uri, string password, out Exception exception)
+    public bool Create(string name, Uri uri, string password, out Exception exception)
     {
         exception = null!;
-        if (NapCatSockets.ContainsKey(name)) {
+        if (Configs.Any(f => f.Name == name)) {
             exception = new Exception("名称重复。");
             return false;
         }
         try {
-            var socket = new NapCatHttpSocket()
+            var entity = new SocketEntity()
             {
-                Uri = uri,
-                Password = password
+                 Name = name,
+                 Uri = uri.ToString(),
+                 IsEnable = true,
+                 Password = password ?? ""
             };
-            NapCatSockets.TryAdd(name, socket);
-            region.Enqueue(new QueueSocketTask(
-                socket, 
-                connectionErrorCall: ErrorCallRemove, 
-                reciveErrorCall: ErrorCallReConnection)); // 这里可以添加错误回调
+            Enable(entity);
+            AddConfig(entity);
         } catch(Exception e) {
             exception = e;
-            RemoveSocket(name);
+            Disable(name);
             return false;
         }
         return true;
+    }
+
+    /// <summary>
+    /// 将内容添加到配置
+    /// </summary>
+    private static void AddConfig(SocketEntity entity)
+    {
+        var c = Configs;
+        c.Add(entity);
+        Configs = c;
+    }
+
+    /// <summary>
+    /// 删除给定配置
+    /// </summary>
+    private static void DeleteConfig(string name)
+    {
+        var c = Configs;
+        int count = c.RemoveAll(f => f.Name == name);
+        if(count == 0) return;
+        Configs = c;
     }
 
     private Task ErrorCallReConnection(SocketRegionService region, NapCatHttpSocket socket, Exception e)
@@ -85,15 +198,12 @@ public class NapCatSocketManager
 
     private Task ErrorCallRemove(SocketRegionService region, NapCatHttpSocket socket, Exception e)
     {
-        RemoveSocket(socket);
+        Close(socket);
         return Task.CompletedTask;
     }
 
-    public List<SocketEntity> Sockets => [.. NapCatSockets.Select(s => new SocketEntity() 
-    { 
-        IsEnable = true, 
-        Name = s.Key, 
-        Password = s.Value.Password ?? string.Empty, 
-        Uri = s.Value.Uri.ToString() 
-    })];
+    /// <summary>
+    /// 全部socket集合 包括未启用的
+    /// </summary>
+    public List<SocketEntity> Sockets => Configs;
 }
