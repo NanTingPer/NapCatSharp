@@ -101,7 +101,9 @@ public class ModContext : AssemblyLoadContext
             UnloadModRef(modName);
             ModConfigLoader.ClearJsonCache();
             value.Unload();
-            GC.Collect(); // 不回收要等到被动回收，在那之前 文件仍然被引用
+            for(int i = 0; i < 10; i++) {
+                GC.Collect(); // 不回收要等到被动回收，在那之前 文件仍然被引用
+            }
             GC.WaitForPendingFinalizers();
             GC.Collect();
         }
@@ -169,8 +171,7 @@ public class PropertySets
 {
     public Dictionary<string, PropertyAccessor> PropertyMap { get; set; } = [];
     
-    public void Add(string name, Action<object, object> set, Type proptype) =>
-        PropertyMap[name] = new PropertyAccessor(){ Name = name, PropertyType = proptype, SetValue = set };
+    public void Add(string name, Action<object, object> set/*, Type proptype*/) =>
         PropertyMap[name] = new PropertyAccessor(){ Name = name,/* PropertyType = proptype, */SetValue = set };
 
     /// <summary>

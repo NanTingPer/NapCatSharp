@@ -42,9 +42,7 @@ public static class ModConfigLoader
             var cfPath = Path.Combine(modCfPath, configType.Name + ".json");
             CreateFileIfNotExist(cfPath);
             var text = File.ReadAllText(cfPath, Encoding.UTF8);
-            configType.GetPropertySets();
-            if(configType.FullName != null) {
-                ModContext.ModConfigPropertySets[configType.FullName] = configType.GetPropertySets();
+            if(configType.FullName == null) {
                 continue;
             }
             ModContext.ModConfigPropertySets[configType.FullName] = configType.GetPropertySets();
@@ -56,7 +54,7 @@ public static class ModConfigLoader
                 continue;
             }
 
-            var cfObj = (ModConfig)JsonSerializer.Deserialize(text, configType)!;
+            var cfObj = (ModConfig)JsonSerializer.Deserialize(text, configType, JOptions)!;
             cfObj.ModName = modName;
             ModContext.AddConfig(modName, cfObj);
         }
@@ -77,10 +75,6 @@ public static class ModConfigLoader
         }
     }
 
-    private static readonly JsonSerializerOptions joptions = new JsonSerializerOptions()
-    {
-         Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-         WriteIndented = true
     private static void WriteFileToJson(string path, object obj, Type type)
     {
         var jsonText = JsonSerializer.Serialize(obj, type, JOptions);
