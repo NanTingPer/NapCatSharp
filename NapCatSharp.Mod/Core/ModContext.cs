@@ -99,6 +99,7 @@ public class ModContext : AssemblyLoadContext
             ModContexts.TryRemove(modName, out _); // 移除context引用
             UnloadConfig(modName);
             UnloadModRef(modName);
+            ModConfigLoader.ClearJsonCache();
             value.Unload();
             GC.Collect(); // 不回收要等到被动回收，在那之前 文件仍然被引用
             GC.WaitForPendingFinalizers();
@@ -170,6 +171,7 @@ public class PropertySets
     
     public void Add(string name, Action<object, object> set, Type proptype) =>
         PropertyMap[name] = new PropertyAccessor(){ Name = name, PropertyType = proptype, SetValue = set };
+        PropertyMap[name] = new PropertyAccessor(){ Name = name,/* PropertyType = proptype, */SetValue = set };
 
     /// <summary>
     /// 尝试获取此属性的SetValue
@@ -217,7 +219,7 @@ public class PropertySets
     {
         foreach (var item in PropertyMap) {
             item.Value.SetValue = null!;
-            item.Value.PropertyType = null!;
+            //item.Value.PropertyType = null!;
         }
         PropertyMap.Clear();
     }
@@ -235,7 +237,7 @@ public class PropertyAccessor
     /// <summary>
     /// 此属性的类型
     /// </summary>
-    public required Type PropertyType { get; set; }
+    //public required Type PropertyType { get; set; }
     /// <summary>
     /// 此属性的名称
     /// </summary>

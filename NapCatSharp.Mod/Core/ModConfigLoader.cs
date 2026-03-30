@@ -11,9 +11,25 @@ public static class ModConfigLoader
     internal readonly static string BasePath = System.IO.Path.Combine(AppContext.BaseDirectory, "configs", "mods");
     internal static string GetModConfigPath(string modName)
         => Path.Combine(BasePath, modName);
-    /// <summary>
-    /// 加载单个config
-    /// </summary>
+
+    internal static JsonSerializerOptions JOptions
+    {
+        get
+        {
+            return field ??= new JsonSerializerOptions()
+            {
+                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+                WriteIndented = true
+            };
+        }
+        set => field = value;
+    }
+
+    internal static void ClearJsonCache()
+    {
+        JOptions = null!;
+    }
+
     internal static void LoadConfig(string modName, Assembly modAssembly)
     {
         if (!Directory.Exists(BasePath)) {
@@ -29,7 +45,9 @@ public static class ModConfigLoader
             configType.GetPropertySets();
             if(configType.FullName != null) {
                 ModContext.ModConfigPropertySets[configType.FullName] = configType.GetPropertySets();
+                continue;
             }
+            ModContext.ModConfigPropertySets[configType.FullName] = configType.GetPropertySets();
             if (string.IsNullOrWhiteSpace(text)) {
                 var configObj = (ModConfig)Activator.CreateInstance(configType)!;
                 configObj.ModName = modName;
@@ -63,10 +81,9 @@ public static class ModConfigLoader
     {
          Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
          WriteIndented = true
-    };
     private static void WriteFileToJson(string path, object obj, Type type)
     {
-        var jsonText = JsonSerializer.Serialize(obj, type, joptions);
+        var jsonText = JsonSerializer.Serialize(obj, type, JOptions);
         File.WriteAllText(path, jsonText);
     }
 
