@@ -1,7 +1,6 @@
 ﻿using NapCatSharp.Core;
 using NapCatSharp.Mod.ConfigEntitys;
 using NapCatSharp.Mod.Services;
-using Serilog;
 using System.Collections.Concurrent;
 using System.Text.Json;
 

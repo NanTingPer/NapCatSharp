@@ -2,7 +2,7 @@
 
 public static class WeakReferenceModExtension
 {
-    extension(WeakReference<Core.Mod> modWeakRef)
+    extension(WeakReference<Core.ModTypes.Mod> modWeakRef)
     {
         public string ModName
         {

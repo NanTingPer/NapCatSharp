@@ -9,8 +9,8 @@ namespace NapCatSharp.Mod.Core;
 public class ModManager
 {
     //public List<WeakReference<NapCatSharp.Core.Mod>> Mods { get; set; }
-    public List<Mod> Mods { get; set; }
-    public ModManager(List<Mod>/*List<WeakReference<NapCatSharp.Core.Mod>>*/ mods)
+    public List<ModTypes.Mod> Mods { get; set; }
+    public ModManager(List<ModTypes.Mod>/*List<WeakReference<NapCatSharp.Core.Mod>>*/ mods)
     {
         Mods = mods;
     }

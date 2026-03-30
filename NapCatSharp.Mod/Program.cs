@@ -15,7 +15,6 @@ Log.Logger = new LoggerConfiguration()
     .WriteTo.File(path: Path.Combine(logsBaseDir, "info.log"), restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Information, encoding: Encoding.UTF8)
     .CreateLogger();
 #endregion
-
 var builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
 builder.Services.AddSerilog(Log.Logger);

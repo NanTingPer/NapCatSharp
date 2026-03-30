@@ -1,5 +1,5 @@
-﻿using NapCatSharp.Mod.Services;
-using Serilog.Core;
+﻿using NapCatSharp.Mod.Extensions;
+using NapCatSharp.Mod.Services;
 using System.Text;
 using System.Text.Json;
 
@@ -55,20 +55,6 @@ public static class ModLoader
         foreach (var item in validModNames) {
             LoadMod(item);
         }
-        //foreach (var modName in validModNames) {
-        //    logger.Info($"加载模组: {modName}");
-        //    var context = new ModContext(modName);
-        //    var modAssembly = context.LoadFromAssemblyPath(context.assemblyPath);
-        //    var modTypes = modAssembly.GetModTypes();
-        //    if(modTypes.Length != 1) {
-        //        context.Unload();
-        //        logger.Error($"模组加载失败: {modName}, 一个程序集只能包含一个Mod，但在{modName}中发现多个");
-        //        throw new Exception($"一个程序集只能包含一个Mod，但在{modName}中发现多个");
-        //    }
-        //    logger.Info($"创建实例: {modName}");
-        //    var mod = (Mod)Activator.CreateInstance(modTypes[0])!;
-        //    ModContext.Mods.Add(mod);
-        //}
     }
 
     /// <summary>
@@ -91,7 +77,9 @@ public static class ModLoader
             return false; // 给定模组文件夹中找不到主程序集 (要与Mod名称一致)
         }
 
-        var context = new ModContext(modName);
+        var context = ModContext.GetOrCreate(modName);
+        if(context == null)
+            return false;
         var modAssembly = context.LoadFromAssemblyPath(context.assemblyPath);
         var modTypes = modAssembly.GetModTypes();
         if (modTypes.Length != 1) {
@@ -99,7 +87,8 @@ public static class ModLoader
             logger.Error($"模组加载失败: {modName}, 一个程序集只能包含一个Mod，但在{modName}中发现多个");
             throw new Exception($"一个程序集只能包含一个Mod，但在{modName}中发现多个");
         }
-        var mod = (Mod)Activator.CreateInstance(modTypes[0])!;
+        ModConfigLoader.LoadConfig(modName, modAssembly);
+        var mod = (ModTypes.Mod)Activator.CreateInstance(modTypes[0])!;
         logger.Info($"创建实例: {modName}");
         ModContext.Mods.Add(mod);
         var newlist = EnableModList.ToHashSet();

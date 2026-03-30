@@ -1,20 +1,35 @@
-﻿using System.Collections.Concurrent;
+﻿using NapCatSharp.Mod.Core.ModTypes;
+using System.Collections.Concurrent;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Loader;
+using System.Xml.Linq;
 
 namespace NapCatSharp.Mod.Core;
 
 public class ModContext : AssemblyLoadContext
 {
-    internal readonly static List<Mod/*WeakReference<NapCatSharp.Core.Mod>*/> Mods = [];
-    /// <summary> 所以Mod的根目录 </summary>
+    internal readonly static List<ModTypes.Mod> Mods = [];
+    /// <summary> 所有Mod的根目录 </summary>
     public readonly static string ModPath = Path.Combine(AppContext.BaseDirectory, "Mods");
-    internal readonly static ConcurrentDictionary<string, Assembly/*WeakReference<Assembly>*/> ModAssemblys = [];
-    internal readonly static ConcurrentDictionary<string, ModContext/*WeakReference<ModContext>*/> ModContexts = [];
+    internal readonly static ConcurrentDictionary<string, Assembly> ModAssemblys = [];
+    /// <summary>
+    /// key是modName
+    /// </summary>
+    internal readonly static ConcurrentDictionary<string, ModContext> ModContexts = [];
+    #region ModConfig
+    /// <summary>
+    /// key是modName, 值是此Mod的配置列表
+    /// </summary>
+    internal readonly static ConcurrentDictionary<string, List<ModConfig>> ModConfigs = [];
+    /// <summary>
+    /// key是类型的FullName
+    /// </summary>
+    internal readonly static Dictionary<string, PropertySets> ModConfigPropertySets = [];
+    #endregion
     internal readonly string assemblyPath;
     public string? modName;
-    public ModContext(string? name, bool isCollectible = true)
+    private ModContext(string? name, bool isCollectible = true)
         : base(name, isCollectible)
     {
         modName = name;
@@ -29,15 +44,6 @@ public class ModContext : AssemblyLoadContext
             Path.Combine(ModPath, name, name + ".dll");
 
         Unloading += context => {
-            ModAssemblys.TryRemove(modName, out _); // 移除Assembly引用
-            ModContexts.TryRemove(modName, out _); // 移除context引用
-            Mods.RemoveAll(f => f.ModName == modName);
-            //Mods.RemoveAll(f => {
-            //    if (f.TryGetTarget(out var target)) {
-            //        return target.ModName == modName;
-            //    }
-            //    return false;
-            //}); // 移除mod实例
         };
     }
     protected override Assembly? Load(AssemblyName assemblyName)
@@ -76,7 +82,7 @@ public class ModContext : AssemblyLoadContext
         return nint.Zero;
     }
 
-    public static bool TryGetModAssembly(string modName, out Assembly?/*WeakReference<Assembly>?*/ assembly)
+    public static bool TryGetModAssembly(string modName, out Assembly? assembly)
     {
         if(ModAssemblys.TryGetValue(modName, out var a)) {
             assembly = a;
@@ -89,13 +95,148 @@ public class ModContext : AssemblyLoadContext
     public static void UnLoadMod(string modName)
     {
         if (ModContexts.TryGetValue(modName, out var value)) {
-            //if (value.TryGetTarget(out var target)) {
-            //    target.Unload();
-            //}
+            ModAssemblys.TryRemove(modName, out _); // 移除Assembly引用
+            ModContexts.TryRemove(modName, out _); // 移除context引用
+            UnloadConfig(modName);
+            UnloadModRef(modName);
             value.Unload();
             GC.Collect(); // 不回收要等到被动回收，在那之前 文件仍然被引用
             GC.WaitForPendingFinalizers();
             GC.Collect();
         }
     }
+
+    private readonly static Lock createContextLock = new Lock();
+    public static ModContext? GetOrCreate(string modName)
+    {
+        lock(createContextLock) {
+            try {
+                if (ModContexts.TryGetValue(modName, out var value)) {
+                    return value;
+                }
+                var context = new ModContext(modName);
+                ModContexts[modName] = context;
+                return context;
+            } catch(Exception e) {
+                ModLoader.logger.Error($"上下文创建失败 {e.Message} {modName}");
+                return null;
+            }
+        }
+    }
+
+    private readonly static Lock addConfigLock = new Lock();
+    internal static void AddConfig(string modName, ModConfig config)
+    {
+        lock (addConfigLock) {
+            try {
+                if (ModConfigs.TryGetValue(modName, out var value)) {
+                    value.Add(config);
+                } else {
+                    List<ModConfig> configs = [config];
+                    ModConfigs[modName] = configs;
+                }
+            } catch{}
+        }
+    }
+
+    #region Unload
+    private static void UnloadConfig(string modName)
+    {
+        if (ModConfigs.Remove(modName, out var configs)) {
+            foreach (var config in configs) {
+                config.Unload();
+                if(ModConfigPropertySets.Remove(config.Name, out var value)) {
+                    value.Clear();
+                }
+            }
+        }
+    }
+    private static void UnloadModRef(string modName)
+    {
+        Mods.RemoveAll(f => {
+            if (f.ModName == modName) {
+                f.Unload();
+                return true;
+            }
+            return false;
+        });
+    }
+    #endregion
+}
+
+public class PropertySets
+{
+    public Dictionary<string, PropertyAccessor> PropertyMap { get; set; } = [];
+    
+    public void Add(string name, Action<object, object> set, Type proptype) =>
+        PropertyMap[name] = new PropertyAccessor(){ Name = name, PropertyType = proptype, SetValue = set };
+
+    /// <summary>
+    /// 尝试获取此属性的SetValue
+    /// </summary>
+    /// <param name="name">属性名</param>
+    /// <param name="value">属性值</param>
+    /// <returns></returns>
+    public bool TryGetSet(string name, out PropertyAccessor value)
+    {
+        if (PropertyMap.TryGetValue(name, out value!)) {
+            return true;
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// 设置这个属性的值
+    /// </summary>
+    /// <param name="name">属性名</param>
+    /// <param name="orig">原对象</param>
+    /// <param name="newValue">新值</param>
+    public void SetValue(string name, object orig, object newValue)
+    {
+        if(TryGetSet(name, out var value)) {
+            value.SetValue?.Invoke(orig, newValue);
+        }
+    }
+
+    public PropertyAccessor this[string name]
+    {
+        get
+        {
+            if (PropertyMap.TryGetValue(name, out PropertyAccessor? value)) {
+                return value;
+            }
+            throw new KeyNotFoundException($"未找到{name}的属性设置器");
+        }
+        set
+        {
+            PropertyMap[name] = value;
+        }
+    }
+
+    public void Clear()
+    {
+        foreach (var item in PropertyMap) {
+            item.Value.SetValue = null!;
+        }
+        PropertyMap.Clear();
+    }
+}
+
+/// <summary>
+/// 包含属性的Set
+/// </summary>
+public class PropertyAccessor
+{
+    /// <summary>
+    /// 此属性的Set方法
+    /// </summary>
+    public required Action<object, object> SetValue { get; set; }
+    /// <summary>
+    /// 此属性的类型
+    /// </summary>
+    public required Type PropertyType { get; set; }
+    /// <summary>
+    /// 此属性的名称
+    /// </summary>
+    public required string Name { get; set; }
 }

@@ -3,9 +3,9 @@ using NapCatSharp.EventPushModels.MessageSentEvents;
 using NapCatSharp.EventPushModels.MetaEvents;
 using NapCatSharp.EventPushModels.RequestEvents;
 
-namespace NapCatSharp.Mod.Core;
+namespace NapCatSharp.Mod.Core.ModTypes;
 
-public abstract class Mod
+public abstract class Mod : ModType
 {
     public string ModName => this.GetType().Name;
     public virtual void MetaLifecycle(Lifecycle lifecycle){}
