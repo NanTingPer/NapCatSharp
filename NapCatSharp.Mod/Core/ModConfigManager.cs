@@ -10,7 +10,7 @@ public static class ModConfigManager
     internal static T? GetConfig<T>()
         where T : ModConfig
     {
-        var config = ModContext.ModConfigs.Values.SelectMany(f => f).FirstOrDefault(f => f.Name == typeof(T).FullName);
+        var config = ModContext.ModConfigs.Values.SelectMany(f => f).FirstOrDefault(f => f.Name() == typeof(T).FullName);
         if (config != null) {
             return (T)config;
         }

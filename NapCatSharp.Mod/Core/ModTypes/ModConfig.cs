@@ -6,8 +6,10 @@ namespace NapCatSharp.Mod.Core.ModTypes;
 
 public class ModConfig : ModType
 {
-    [JsonIgnore]
-    internal string Name => GetType().FullName ?? "动态类型";
+    internal string Name()
+    {
+        return GetType().FullName ?? "动态类型";
+    }
     internal string ModName { get; set; } = string.Empty;
 
     /// <summary>
@@ -15,8 +17,8 @@ public class ModConfig : ModType
     /// </summary>
     internal void CompleteCover(JsonObject jobject)
     {
-        if (!ModContext.ModConfigPropertySets.TryGetValue(Name, out var propSet)){
-            ModLoader.logger.Warning($"未找到{Name}的属性设置器，请确保此配置被注册");
+        if (!ModContext.ModConfigPropertySets.TryGetValue(Name(), out var propSet)){
+            ModLoader.logger.Warning($"未找到{Name()}的属性设置器，请确保此配置被注册");
             return;
         }
         var props = GetType().GetProperties();
@@ -25,14 +27,14 @@ public class ModConfig : ModType
             if (tarProp == null) continue;
             object? newValue;
             try {
-                newValue = JsonSerializer.Deserialize(keyValue.Value, tarProp.PropertyType);
+                newValue = JsonSerializer.Deserialize(keyValue.Value, tarProp.PropertyType, ModConfigLoader.JOptions);
             } catch(Exception) {
                 ModLoader.logger.Warning($"将内容{keyValue.Value?.ToJsonString() ?? "null"}序列化为 {tarProp.PropertyType.FullName}失败");
                 continue;
             }
             if (newValue == null) return;
-            if (propSet.TryGetSet(keyValue.Key, out var set)) {
-                ModLoader.logger.Warning($"未找到{Name} {keyValue.Key}的属性设置器，请确保未排除此项");
+            if (!propSet.TryGetSet(keyValue.Key, out var set)) {
+                ModLoader.logger.Warning($"未找到{Name()} {keyValue.Key}的属性设置器，请确保未排除此项");
                 continue;
             }
             set.SetValue?.Invoke(this, newValue);

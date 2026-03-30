@@ -145,7 +145,7 @@ public class ModContext : AssemblyLoadContext
         if (ModConfigs.Remove(modName, out var configs)) {
             foreach (var config in configs) {
                 config.Unload();
-                if(ModConfigPropertySets.Remove(config.Name, out var value)) {
+                if(ModConfigPropertySets.Remove(config.Name(), out var value)) {
                     value.Clear();
                 }
             }
@@ -217,6 +217,7 @@ public class PropertySets
     {
         foreach (var item in PropertyMap) {
             item.Value.SetValue = null!;
+            item.Value.PropertyType = null!;
         }
         PropertyMap.Clear();
     }
