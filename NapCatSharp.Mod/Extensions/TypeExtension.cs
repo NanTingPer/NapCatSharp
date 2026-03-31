@@ -28,7 +28,7 @@ public static class TypeExtension
             var value_type = Expression.Convert(value_object, propertyInfo.PropertyType); // (Type)value 
             var assign_expression = Expression.Assign(e_expression, value_type); // ((Type)e_object).Prop = (Type)value
             var lambda = Expression.Lambda<Action<object, object>>(assign_expression, e_object, value_object).Compile();
-            propSets.Add(propertyInfo.Name, lambda, propertyInfo.PropertyType);
+            propSets.Add(propertyInfo.Name, lambda/*, propertyInfo.PropertyType*/);
         }
         return propSets;
     }
