@@ -18,6 +18,7 @@ public class ModContext : AssemblyLoadContext
     /// key是modName
     /// </summary>
     internal readonly static ConcurrentDictionary<string, ModContext> ModContexts = [];
+    internal readonly static ConcurrentDictionary<string, List<MemoryStream>> ModAssemblyBytes = []; 
     #region ModConfig
     /// <summary>
     /// key是modName, 值是此Mod的配置列表
@@ -56,8 +57,20 @@ public class ModContext : AssemblyLoadContext
         if (!Path.Exists(assemblyPath)) {
             return null;
         }
-        var assembly = LoadFromAssemblyPath(assemblyPath);
-        if(modName == assemblyName.Name) {
+
+        #region 从文件加载到内容
+        var fileBytes = File.ReadAllBytes(assemblyPath);
+        var assemblyStream = new MemoryStream(fileBytes);
+        if(ModAssemblyBytes.TryGetValue(modName, out var list)) {
+            list.Add(assemblyStream);
+        } else {
+            List<MemoryStream> asmStreams = [assemblyStream];
+            ModAssemblyBytes[modName] = asmStreams;
+        }
+        #endregion
+        var assembly = LoadFromStream(assemblyStream);
+
+        if (modName == assemblyName.Name) {
             //ModAssemblys[modName] = new WeakReference<Assembly>(assembly);
             ModAssemblys[modName] = assembly;
         }
@@ -96,8 +109,7 @@ public class ModContext : AssemblyLoadContext
     public static void UnLoadMod(string modName)
     {
         GCUnloadLast(modName);
-        for (int i = 0; i < 5; i++) {
-            //GC.Collect(-1, GCCollectionMode.Aggressive);
+        for (int i = 0; i < 10; i++) {
             GC.Collect();
             GC.WaitForPendingFinalizers();
         }
@@ -112,6 +124,7 @@ public class ModContext : AssemblyLoadContext
         UnloadAC(modName); // 清楚程序集和上下文引用
         UnloadConfig(modName);
         UnloadModRef(modName);
+        UnloadDllStream(modName);
         ModConfigLoader.ClearJsonCache();
         context.Unload();
         context = null;
@@ -178,6 +191,16 @@ public class ModContext : AssemblyLoadContext
             }
             return false;
         });
+    }
+
+    private static void UnloadDllStream(string modName)
+    {
+        if(ModAssemblyBytes.TryRemove(modName, out var value)) {
+            foreach(var ms in value) {
+                ms.Dispose();
+            }
+            value.Clear();
+        }
     }
     #endregion
 }
