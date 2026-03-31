@@ -1,4 +1,5 @@
-﻿using NapCatSharp.Mod.Extensions;
+﻿using Microsoft.AspNetCore.Mvc.ModelBinding.Metadata;
+using NapCatSharp.Mod.Extensions;
 using NapCatSharp.Mod.Services;
 using System.Text;
 using System.Text.Json;
@@ -80,7 +81,7 @@ public static class ModLoader
         var context = ModContext.GetOrCreate(modName);
         if(context == null)
             return false;
-        var modAssembly = context.LoadFromAssemblyPath(context.assemblyPath);
+        var modAssembly = context.LoadFromStream(context.GetModDllMemoryStream() /*context.assemblyPath*/); // yeah 这里对文件引用了
         var modTypes = modAssembly.GetModTypes();
         if (modTypes.Length != 1) {
             context.Unload();
@@ -183,7 +184,7 @@ public static class ModLoader
         DisableMod(modName);
         var modDirName = Path.Combine(ModContext.ModPath, modName);
         if (Directory.Exists(modDirName)) {
-            Directory.Delete(modDirName, recursive);
+            Directory.Delete(modDirName, true);
         }
     }
 

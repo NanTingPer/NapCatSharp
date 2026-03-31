@@ -58,7 +58,7 @@ public class ModContext : AssemblyLoadContext
             return null;
         }
 
-        #region 从文件加载到内容
+        #region 从文件加载到内存
         var fileBytes = File.ReadAllBytes(assemblyPath);
         var assemblyStream = new MemoryStream(fileBytes);
         if(ModAssemblyBytes.TryGetValue(modName, out var list)) {
@@ -109,10 +109,23 @@ public class ModContext : AssemblyLoadContext
     public static void UnLoadMod(string modName)
     {
         GCUnloadLast(modName);
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 5; i++) {
             GC.Collect();
             GC.WaitForPendingFinalizers();
         }
+    }
+
+    public MemoryStream GetModDllMemoryStream()
+    {
+        var fileBytes = File.ReadAllBytes(assemblyPath);
+        var assemblyStream = new MemoryStream(fileBytes);
+        if (ModAssemblyBytes.TryGetValue(modName!, out var list)) {
+            list.Add(assemblyStream);
+        } else {
+            List<MemoryStream> asmStreams = [assemblyStream];
+            ModAssemblyBytes[modName!] = asmStreams;
+        }
+        return assemblyStream;
     }
 
     /// <summary>
