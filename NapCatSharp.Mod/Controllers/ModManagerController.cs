@@ -31,8 +31,7 @@ public class ModManagerController(ModManager manager) : ControllerBase
     [HttpPost("disablemod")]
     public IActionResult DisableMod([FromBody] SimpleModInput modname)
     {
-        var mod = manager.Mods.FirstOrDefault(f => f.ModName == modname);
-        if (mod != null) {
+        if (manager.Mods.Any(f => f.ModName == modname)) {
             ModLoader.DisableMod(modname);
         }
         return Ok();

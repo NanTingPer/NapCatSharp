@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Loader;
+using System.Text.Json.Serialization;
 using System.Xml.Linq;
 
 namespace NapCatSharp.Mod.Core;
@@ -94,19 +95,26 @@ public class ModContext : AssemblyLoadContext
 
     public static void UnLoadMod(string modName)
     {
-        if (ModContexts.TryGetValue(modName, out var value)) {
-            ModAssemblys.TryRemove(modName, out _); // 移除Assembly引用
-            ModContexts.TryRemove(modName, out _); // 移除context引用
-            UnloadConfig(modName);
-            UnloadModRef(modName);
-            ModConfigLoader.ClearJsonCache();
-            value.Unload();
-            for(int i = 0; i < 10; i++) {
-                GC.Collect(); // 不回收要等到被动回收，在那之前 文件仍然被引用
-            }
-            GC.WaitForPendingFinalizers();
+        GCUnloadLast(modName);
+        for (int i = 0; i < 5; i++) {
+            //GC.Collect(-1, GCCollectionMode.Aggressive);
             GC.Collect();
+            GC.WaitForPendingFinalizers();
         }
+    }
+
+    /// <summary>
+    /// 触发GC之前执行卸载
+    /// </summary>
+    private static void GCUnloadLast(string modName)
+    {
+        if (!ModContexts.TryGetValue(modName, out var context)) return;
+        UnloadAC(modName); // 清楚程序集和上下文引用
+        UnloadConfig(modName);
+        UnloadModRef(modName);
+        ModConfigLoader.ClearJsonCache();
+        context.Unload();
+        context = null;
     }
 
     private readonly static Lock createContextLock = new Lock();
@@ -143,6 +151,12 @@ public class ModContext : AssemblyLoadContext
     }
 
     #region Unload
+    private static void UnloadAC(string modName)
+    {
+        ModAssemblys.TryRemove(modName, out _);
+        ModContexts.TryRemove(modName, out _);
+    }
+
     private static void UnloadConfig(string modName)
     {
         if (ModConfigs.Remove(modName, out var configs)) {
@@ -152,6 +166,7 @@ public class ModContext : AssemblyLoadContext
                     value.Clear();
                 }
             }
+            configs.Clear();
         }
     }
     private static void UnloadModRef(string modName)
