@@ -1,0 +1,118 @@
+﻿<!DOCTYPE html>
+
+<body>
+    <div id="renderDiv"></div>
+    <script>
+        const objName = 'testObj';
+        var tobject = {
+            array: [{name: 'a'}, {name:'b'}],
+            name: 'hh'
+        };
+        /**
+         * 判断value是否是一个object
+         */
+        function isObject(value) {
+            return value != null
+                && typeof value === 'object'
+                && Object.prototype.toString.call(value) === '[object Object]'
+        }
+
+        /**
+         * 判断value是否是一个array
+         */
+        function isArray(value) {
+            return Array.isArray(value);
+        }
+
+        /**
+         * 递归一个对象
+         * @returns { { keyName: string, value: string }[] }
+         */
+        function recursiveObject(object, parentName = '') {
+            /**
+             * @@type { { keyName: string, value: string } [] }
+             */
+            var values = [];
+            Object.keys(object).forEach(key => {
+                let fullKey = parentName == '' ? key : parentName + '.' + key
+                let propValue = object[key];
+                if(propValue == "[object Object]"){
+                    propValue = JSON.stringify(object[key]);
+                }
+                if (isObject(propValue) && !isArray(propValue)) { // 是对象 但不能是数组
+                    values.push(...recursiveObject(propValue, fullKey));
+                    return;
+                }
+
+                if (isArray(propValue)) {
+                    values.push({ keyName: fullKey, value: propValue, isArray: true });
+                } else {
+                    values.push({ keyName: fullKey, value: propValue });
+                }
+            });
+            return values;
+        }
+
+        function renderObject() {
+            let divId = 'renderDiv'
+            let element = document.getElementById(divId);
+            let values = recursiveObject(tobject, '');
+            let renderHtml = '';
+            renderHtml += '<table>'
+            values.forEach(fkv => {
+                console.log(fkv);
+                renderHtml += `
+                    <tr> <td> ${fkv.keyName} </td> <td> 
+                    <input type="text" 
+                        value="${fkv.value.toString() == "[object Object]" ? JSON.stringify(fkv.value) : fkv.value}" 
+                        id="${objName}.${fkv.keyName}"> </td>  </tr>`;
+            });
+            renderHtml += '</table>'
+            element.innerHTML = renderHtml;
+        }
+
+        /**
+         * 从页面中构建对象
+         * @param { string } objName
+         */
+        function buildObject(objName) {
+            /**
+             * @type { HTMLElement[] }
+             */
+            let elements = [];
+            for (let i = 0; i < document.all.length; i++) {
+                let element = document.all.item(i);
+                if (element.id.startsWith(objName))
+                    elements.push(element);
+            }
+            console.log('获取到的元素数量: ' + elements.length);
+            let buildObj = {};
+            elements.forEach(element => { // 遍历符合条件的元素, 也就是这个配置项的全部属性
+                let propName = element.id.substring(objName.length + 1);
+                let origProp = tobject;
+                buildObj[propName] = element.value;
+            });
+            console.log(buildObj);
+            var finalObj = {};
+            recursiveObject(buildObj).forEach(key => {
+                const parts = key.keyName.split('.');
+                let current = finalObj;
+                for (let i = 0; i < parts.length - 1; i++) {
+                    const part = parts[i];
+                    if (!current[part] || typeof current[part] !== 'object') {
+                        current[part] = {};
+                    }
+                    current = current[part];
+                }
+                if (key.isArray) {
+                    current[parts[parts.length - 1]] = Array(buildObj[key.keyName]);
+                } else {
+                    current[parts[parts.length - 1]] = buildObj[key.keyName];
+                }
+            });
+            console.log(finalObj);
+        }
+        renderObject();
+    </script>
+    <button onclick="buildObject('testObj')"></button>
+</body>
