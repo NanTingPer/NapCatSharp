@@ -9,6 +9,11 @@ namespace NapCatSharp.Mod.Core;
 public static class ModConfigLoader
 {
     internal readonly static string BasePath = System.IO.Path.Combine(AppContext.BaseDirectory, "configs", "mods");
+    /// <summary>
+    /// 获取模组文件夹路径
+    /// </summary>
+    /// <param name="modName"></param>
+    /// <returns></returns>
     internal static string GetModConfigPath(string modName)
         => Path.Combine(BasePath, modName);
 
@@ -35,11 +40,10 @@ public static class ModConfigLoader
         if (!Directory.Exists(BasePath)) {
             Directory.CreateDirectory(BasePath);
         }
-        var modCfPath = Path.Combine(BasePath, modName);
         var modConfigTypes = modAssembly.GetRealizeType<ModConfig>();
 
         foreach (var configType in modConfigTypes) {
-            var cfPath = Path.Combine(modCfPath, configType.Name + ".json");
+            var cfPath = GetConfigFilePath(modName, configType);
             CreateFileIfNotExist(cfPath);
             var text = File.ReadAllText(cfPath, Encoding.UTF8);
             if(configType.FullName == null) {
@@ -58,6 +62,15 @@ public static class ModConfigLoader
             cfObj.ModName = modName;
             ModContext.AddConfig(modName, cfObj);
         }
+    }
+
+    /// <summary>
+    /// 获取配置文件的路径
+    /// </summary>
+    public static string GetConfigFilePath(string modName, Type type)
+    {
+        var modCfPath = Path.Combine(BasePath, modName);
+        return Path.Combine(modCfPath, type.Name + ".json");
     }
 
     /// <summary>
@@ -81,6 +94,6 @@ public static class ModConfigLoader
         File.WriteAllText(path, jsonText);
     }
 
-    internal static void OverrideFileToJson(string modName, ModConfig config, Type type)
-        => WriteFileToJson(Path.Combine(GetModConfigPath(modName), type.Name + ".json"), config, type);
+    //internal static void OverrideFileToJson(string modName, ModConfig config, Type type)
+    //    => WriteFileToJson(Path.Combine(GetModConfigPath(modName), type.Name + ".json"), config, type);
 }

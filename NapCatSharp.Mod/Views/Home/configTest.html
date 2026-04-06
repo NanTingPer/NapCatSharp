@@ -85,7 +85,6 @@
                 if (element.id.startsWith(objName))
                     elements.push(element);
             }
-            console.log('获取到的元素数量: ' + elements.length);
             let buildObj = {};
             elements.forEach(element => { // 遍历符合条件的元素, 也就是这个配置项的全部属性
                 let propName = element.id.substring(objName.length + 1);
@@ -111,6 +110,7 @@
                 }
             });
             console.log(finalObj);
+            return finalObj;
         }
         renderObject();
     </script>

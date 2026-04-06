@@ -1,0 +1,202 @@
+﻿@using NapCatSharp.Mod.Core
+@{
+    ViewData["Title"] = "Config Manager";
+}
+<div>
+    <script src="/js/configManager.js"></script>
+    <h1> 欢迎访问配置管理器 </h1>
+    <hr>
+    <div id="configList"></div>
+    <script>
+        // modname.configName. key
+
+        /**
+         * @@type { { modName: string, configName: string, config: { configName: string } }[] }
+         */
+        let objectArray = [];
+        function buildObject(modName, configName) {
+            let origObj = objectArray.find(f => f.modName == modName && f.configName == configName);
+            let elementId = `${modName}.${configName}.`;
+            /**
+             * @@type { HTMLElement[] }
+             */
+            let elements = [];
+            document.all().forEach(element => { // 找出符合条件的元素
+                if(element.id.startsWith(elementId))
+                    elements.push(element);
+            });
+
+            elements.forEach(element => { // 遍历符合条件的元素, 也就是这个配置项的全部属性
+               let propName = element.id.substring(elementId.length);
+               let origProp = Object.keys(origObj.config).find(k => k == propName);
+               if (origProp == undefined) return;
+               
+            });
+        }
+
+        async function renderConfig() {
+            /**
+             * 后端返回的配置数组
+             * @@type { Array<{ modName: string, configs: Array<{ configName: string }> }> }
+             */
+            let configs = await (await getConfigs()).json();
+            let configListElement = document.getElementById('configList');
+            let allHtml = '';
+            configs.forEach(modNameAndModConfigs => {
+                // 这里表示一个模组
+                let modHtml = '';
+                modHtml += `<h2>${modNameAndModConfigs.modName}</h2>`;
+                modNameAndModConfigs.configs.forEach(singleConfig => {
+                    modHtml += '<table>';
+                    objectArray.push({ 
+                        modName: modNameAndModConfigs.modName, 
+                        configName: singleConfig.configName, 
+                        config: singleConfig 
+                    });
+
+                    // 取单个配置的key和值，并扁平化
+                    recursiveObject(singleConfig).filter(k => k.keyName != 'configName').forEach(configKv => {
+                        let elementId = `${modNameAndModConfigs.modName}.${singleConfig.configName}.${configKv.keyName}`;
+                        modHtml += `
+                            <tr> <td> ${configKv.keyName} </td> <td> 
+                            <input  type="text" 
+                                    value="${configKv.value}" 
+                                    id="${elementId}"> 
+                            </td>  </tr>`;
+                    });
+                    modHtml += `</table>`;
+                    // 构建提交对象
+                    modHtml += `<input type="button" value="确定" onclick="buildObject('${modNameAndModConfigs.modName}', '${singleConfig.configName}')">`;
+                    modHtml += `<hr>`;
+                })
+                allHtml += modHtml;
+            });
+            configListElement.innerHTML = allHtml;
+        }
+
+        /**
+         * 判断value是否是一个object
+         */
+        function isObject(value){
+            return value != null 
+                && typeof value === 'object' 
+                && Object.prototype.toString.call(value) === '[object Object]'
+        }
+
+        /**
+         * 判断value是否是一个array
+         */
+        function isArray(value){
+            return Array.isArray(value);
+        }
+
+        /**
+         * 递归一个对象
+         * @@returns { { keyName: string, value: string }[] }
+         */
+        function recursiveObject(object, parentName = '') {
+            /**
+             * @@type { { keyName: string, value: string } [] }
+             */
+            var values = [];
+            Object.keys(object).forEach(key => {
+                let fullKey = parentName == '' ? key : parentName + '.' + key
+                let propValue = object[key];
+                if(isObject(propValue) && !isArray(propValue)){ // 是对象 但不能是数组
+                    values.push(... recursiveObject(propValue, fullKey));
+                    return;
+                }
+                values.push({ keyName: fullKey, value: propValue });
+            });
+            return values;
+        }
+        
+        /**
+         * 从页面中构建对象
+         */
+        async function buildObject(modName, configName) {
+            /**
+             * @@type { HTMLElement[] }
+             */
+            let elements = [];
+            
+            const elementIdStart = `${modName}.${configName}`;
+            let tobject = objectArray.find(mc => mc.modName == modName && mc.configName == configName).config;
+
+            // 获取此配置的element
+            for (let i = 0; i < document.all.length; i++) {
+                let element = document.all.item(i);
+                if (element.id.startsWith(elementIdStart)) // modName.configName
+                    elements.push(element);
+            }
+
+            // 使用配置的element构建一个新的配置对象
+            // 注意 此对象的key的扁平化后的，需要进行map
+            let buildObj = {};
+            elements.forEach(element => { // 遍历符合条件的元素, 也就是这个配置项的全部属性
+                let propName = element.id.substring(elementIdStart.length + 1);
+                let origObj = tobject;
+                // 获取源数据类型
+                let origProp = origObj;
+                propName.split('.').forEach(subKey => {
+                    origProp = origProp[subKey];
+                });
+                if (isArray(origProp)) {
+                    // 如果是数组，转换
+                    // 可能还要判断内部类型， 不去支持objet，但是可能得支持number和string
+                    // buildObj[propName] = eval(`Array(${element.value})`);
+                    buildObj[propName] = element.value.split(',');
+                } else {
+                    buildObj[propName] = element.value;
+                }
+            });
+            
+            // 将扁平化对象转换为实际对象
+            var finalObj = {};
+            recursiveObject(buildObj).forEach(key => {
+                const parts = key.keyName.split('.');
+                let current = finalObj;
+                for (let i = 0; i < parts.length - 1; i++) {
+                    const part = parts[i];
+                    if (!current[part] || typeof current[part] !== 'object') {
+                        current[part] = {};
+                    }
+                    current = current[part];
+                }
+                if (key.isArray) {
+                    current[parts[parts.length - 1]] = Array(buildObj[key.keyName]);
+                } else {
+                    current[parts[parts.length - 1]] = buildObj[key.keyName];
+                }
+            });
+            console.log("提交对象: ");
+            console.log(finalObj);
+            
+            await updateConfig(modName, finalObj, configName);
+            return finalObj;
+        }
+        renderConfig();
+    </script>
+    <script>
+        // note
+        // 这里表示配置对象
+
+        // 得好好思考一下了
+        // 深度遍历config中的对象 (递归)
+        // 每个配置项生成表格，需要可编辑 每个配置对象单独可提交
+        // 数组:
+        // - 依然使用文本框，但每个元素使用 ',' 分割，在处理时分割成数组塞回去
+        // 对象:
+        // - 遍历，与原逻辑一样，但是在显示使用 属性名称.xxx 也就是属性全名
+
+        // 方法构建
+        // - doument.getElementById(''), 构建的InputId为 configName.属性名称
+        // return {
+        //      propName: propValue, propValue => Input.value
+        //}
+
+        // 提交
+        // - 按钮执行eval的方法 / 传递configName, 从objectArray中覆盖
+        // - 使用eval执行构建的方法
+    </script>
+</div>

@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Text;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 
@@ -6,10 +7,16 @@ namespace NapCatSharp.Mod.Core.ModTypes;
 
 public class ModConfig : ModType
 {
+    internal readonly Lock saveLock = new Lock();
     internal string Name()
     {
         return GetType().FullName ?? "动态类型";
     }
+
+    /// <summary>
+    /// <see cref="ModConfigLoader"/>在实例化时，会给他赋值
+    /// </summary>
+    [JsonIgnore]
     internal string ModName { get; set; } = string.Empty;
 
     /// <summary>
@@ -39,5 +46,29 @@ public class ModConfig : ModType
             }
             set.SetValue?.Invoke(this, newValue);
         }
+        SaveToFile();
+    }
+
+    public void SaveToFile()
+    {
+        var cfFilePath = ModConfigLoader.GetConfigFilePath(ModName, this.GetType());
+        lock (saveLock) {
+            try {
+                File.WriteAllText(cfFilePath, ToJson(), Encoding.UTF8);
+            } catch(Exception e) {
+                ModLoader.logger.Error($"配置{ModName}.{GetType()}保存失败!");
+                ModLoader.logger.Error($"{e.Message} {e.StackTrace}");
+            }
+        }
+    }
+
+    public string ToJson()
+    {
+        return JsonSerializer.Serialize(this, GetType(), ModConfigLoader.JOptions);
+    }
+
+    public JsonObject ToJsonObject()
+    {
+        return JsonSerializer.SerializeToNode(this, GetType(), ModConfigLoader.JOptions)!.AsObject();
     }
 }
