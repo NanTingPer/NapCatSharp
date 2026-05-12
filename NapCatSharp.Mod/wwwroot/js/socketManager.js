@@ -11,8 +11,8 @@ async function create(name, uri, password = ""){
 }
 
 /**
- * 获取当前的全部已启用socket
- * @returns {   { name: string, uri: string, password: string, isEnable: boolean }[] | undefined }
+ * 获取当前的全部已启用socket（含连接状态）
+ * @returns { { name: string, uri: string, password: string, isEnable: boolean, connectionStatus: string, retryCount: number }[] | undefined }
  */
 async function socketList(){
     /**
@@ -26,8 +26,8 @@ async function socketList(){
 }
 
 /**
- * 获取已禁用的socket
- * @returns {   { name: string, uri: string, password: string, isEnable: boolean }[] | undefined }
+ * 获取已禁用的socket（含连接状态）
+ * @returns { { name: string, uri: string, password: string, isEnable: boolean, connectionStatus: string, retryCount: number }[] | undefined }
  */
 async function disableList(){
     /**

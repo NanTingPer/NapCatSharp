@@ -1,6 +1,28 @@
 ﻿@{
     ViewData["Title"] = "Socket Manager";
 }
+<style>
+    .status-dot {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        margin-right: 6px;
+    }
+    .status-connected { background-color: #22c55e; }
+    .status-connecting { background-color: #f59e0b; animation: pulse 1s infinite; }
+    .status-disconnected { background-color: #ef4444; }
+    .socket-table { border-spacing: 10px 5px; }
+    .socket-table td { padding: 10px; }
+    .btn-enable { color: #16a34a; cursor: pointer; }
+    .btn-disable { color: #dc2626; cursor: pointer; }
+    .btn-delete { color: #6b7280; cursor: pointer; }
+    .retry-info { color: #92400e; font-size: 0.85em; }
+    @@keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.4; }
+    }
+</style>
 <div>
     <script src="/js/socketManager.js"></script>
     <h1> 欢迎访问链接管理器 </h1>
@@ -25,6 +47,9 @@
         </tr>
     </table>
     <hr>
+    <h2>连接中列表</h2>
+    <div id="connectingList"></div>
+    <hr>
     <h2>已启用列表</h2>
     <div id="enableList"></div>
     <hr>
@@ -32,58 +57,117 @@
     <div id="disableList"></div>
     <script>
         /**
-         * @@param { { name: string, uri: string, password: string, isEnable: boolean }[] } values 
+         * 获取连接状态的显示 HTML
+         * @@param {string} status - "connected" | "connecting" | "disconnected"
+         * @@param {number} retryCount - 重试次数
+         * @@returns {string} HTML 字符串
          */
-        function renderValue(values) {
-            let html = `<table border-collapse="separate" style="border-spacing: 10px 5px;">`;
-            values.forEach(s => {
-                html += `<tr> <td style="padding: 10px;">`;
-                html += `${s.name}</td><td style="padding: 10px;">`;
-                html += `${s.uri}</td><td style="padding: 10px;">`;
-                html += `<input type="button" value="${s.isEnable ? "禁用" : "启用"}" onclick="${s.isEnable ? "disable" : "enable"}('${s.name}');renderEnableList();renderDisableList();" </td><td style="padding: 10px;">`; //${s.password}
-                html += `<input type="button" value="删除" onclick="deleted('${s.name}');renderEnableList();renderDisableList();"</td>`;
-                html += `</tr>`;
-            })
-            html += `</table>`;
-            return html
+        function getStatusHtml(status, retryCount) {
+            switch (status) {
+                case "connected":
+                    return '<span class="status-dot status-connected"></span>已连接';
+                case "connecting":
+                    if (retryCount > 0) {
+                        return '<span class="status-dot status-connecting"></span>连接中 <span class="retry-info">(第 ' + retryCount + ' 次重试)</span>';
+                    }
+                    return '<span class="status-dot status-connecting"></span>连接中';
+                case "disconnected":
+                default:
+                    return '<span class="status-dot status-disconnected"></span>已断开';
+            }
         }
-        async function renderEnableList() {
+
+        /**
+         * 渲染 socket 列表
+         * @@param { { name: string, uri: string, password: string, isEnable: boolean, connectionStatus: string, retryCount: number }[] } values
+         * @@param {boolean} showStatus - 是否显示连接状态（已禁用列表不显示）
+         */
+        function renderValue(values, showStatus) {
+            let html = '<table class="socket-table">';
+            values.forEach(s => {
+                html += '<tr>';
+                html += '<td>' + s.name + '</td>';
+                html += '<td>' + s.uri + '</td>';
+                if (showStatus) {
+                    html += '<td>' + getStatusHtml(s.connectionStatus, s.retryCount) + '</td>';
+                }
+                html += '<td>';
+                if (s.isEnable) {
+                    html += '<input type="button" class="btn-disable" value="禁用" onclick="disable(\'' + s.name + '\');renderConnectingList();renderEnableList();renderDisableList();">';
+                } else {
+                    html += '<input type="button" class="btn-enable" value="启用" onclick="enable(\'' + s.name + '\');renderConnectingList();renderEnableList();renderDisableList();">';
+                }
+                html += '</td>';
+                html += '<td>';
+                html += '<input type="button" class="btn-delete" value="删除" onclick="deleted(\'' + s.name + '\');renderConnectingList();renderEnableList();renderDisableList();">';
+                html += '</td>';
+                html += '</tr>';
+            });
+            html += '</table>';
+            return html;
+        }
+
+        async function renderConnectingList() {
             /**
-             * @@type { { name: string, uri: string, password: string, isEnable: boolean }[] | undefined }
+             * @@type { { name: string, uri: string, password: string, isEnable: boolean, connectionStatus: string, retryCount: number }[] | undefined }
              */
             let list = await socketList();
-            if (list == undefined){
+            if (list == undefined) {
                 return;
             }
-
-            let listElement = document.getElementById('enableList');
-            let html = renderValue(list);
-            listElement.innerHTML = html;
+            let connecting = list.filter(s => s.connectionStatus === "connecting");
+            let listElement = document.getElementById('connectingList');
+            if (connecting.length === 0) {
+                listElement.innerHTML = '<p style="color: #6b7280;">暂无连接中的 Socket</p>';
+            } else {
+                listElement.innerHTML = renderValue(connecting, true);
+            }
         }
+
+        async function renderEnableList() {
+            /**
+             * @@type { { name: string, uri: string, password: string, isEnable: boolean, connectionStatus: string, retryCount: number }[] | undefined }
+             */
+            let list = await socketList();
+            if (list == undefined) {
+                return;
+            }
+            let enabled = list.filter(s => s.connectionStatus !== "connecting");
+            let listElement = document.getElementById('enableList');
+            if (enabled.length === 0) {
+                listElement.innerHTML = '<p style="color: #6b7280;">暂无已启用的 Socket</p>';
+            } else {
+                listElement.innerHTML = renderValue(enabled, true);
+            }
+        }
+
         async function renderDisableList() {
             let list = await disableList();
-            if(list == undefined) return;
+            if (list == undefined) return;
             let listElement = document.getElementById('disableList');
-            let html = renderValue(list);
-            listElement.innerHTML = html;
+            listElement.innerHTML = renderValue(list, false);
         }
+
         async function createSocket() {
             let elements = {
                 name: document.getElementById('name'),
                 url: document.getElementById('url'),
                 password: document.getElementById('password')
-            }
-            if(elements.name.value == "" || elements.url.value == ""){
+            };
+            if (elements.name.value == "" || elements.url.value == "") {
                 alert("名称或url不能为空");
                 return;
             }
             await create(elements.name.value, elements.url.value, elements.password.value);
             Object.keys(elements).forEach(k => elements[k].value = "");
+            renderConnectingList();
             renderEnableList();
             renderDisableList();
         }
+
+        renderConnectingList();
         renderEnableList();
         renderDisableList();
-        setInterval(() => { this.renderDisableList(); this.renderEnableList() }, 5000); // 5s
+        setInterval(() => { renderConnectingList(); renderEnableList(); renderDisableList(); }, 5000);
     </script>
 </div>

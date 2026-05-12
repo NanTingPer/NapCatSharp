@@ -136,7 +136,7 @@ public class NapCatHttpSocket
     #region ctor
     public NapCatHttpSocket()
     {
-        socket = new ClientWebSocket();
+        socket = new();
 
         #region subTypeEvent
         subTypeEvent = new Dictionary<Type, Dictionary<Enum, List<Action<EventMessageData>>>>()
@@ -174,14 +174,21 @@ public class NapCatHttpSocket
     #endregion
 
     /// <summary>
-    /// 使用给定的Uri进行连接
+    /// 使用给定的Uri进行连接。如果之前的 socket 已被关闭或释放，会自动创建新实例。
     /// </summary>
     /// <param name="cancellationToken"> 停止令牌，传递给 socket.ConnectAsync </param>
     /// <returns></returns>
     public Task Connection(CancellationToken cancellationToken = default)
     {
+        // 如果 socket 已打开，直接返回
         if(socket.State == WebSocketState.Open) {
             return Task.CompletedTask;
+        }
+        // 如果 socket 已被 Abort/Dispose/Close，需要创建新实例
+        if(socket.State == WebSocketState.Aborted ||
+           socket.State == WebSocketState.Closed ||
+           socket.State == WebSocketState.None) {
+            socket = new ClientWebSocket();
         }
         if(Password != null) {
             socket.Options.SetRequestHeader("Authorization", $"Bearer {Password}");
@@ -228,11 +235,11 @@ public class NapCatHttpSocket
         }
     }
 
+    /// <summary>
+    /// 停止当前 socket 连接（不清理事件订阅，允许后续重连）
+    /// </summary>
     public void Stop()
     {
-        try {
-            subTypeEvent.Clear();
-        } catch {}
         try {
             socket.Abort();
         } catch {}

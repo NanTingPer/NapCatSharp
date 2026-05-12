@@ -8,12 +8,9 @@ namespace NapCatSharp.Mod.Core;
 
 /// <summary>
 /// 1. <see cref="NapCatSocketManager"/> 用于在Web / 控制器中创建Socket <br/>
-/// - <see cref="NapCatSocketManager.Create(string, Uri, string, out Exception?)"/> 只负责创建实例，对于链接以及事件订阅，会加入到
-/// <see cref="SocketRegionService"/>的队列中 <br/>
-/// 2. <see cref="NapCatSocketManager.Disable(string)"/> 会同时释放socket链接
+/// - <see cref="NapCatSocketManager.Create(string, Uri, string, out Exception?)"/> 负责创建实例并启动独立后台连接任务 <br/>
+/// 2. <see cref="NapCatSocketManager.Disable(string)"/> 会同时通过 CancellationTokenSource 取消 socket 的重试/连接/接收
 /// </summary>
-//file class Note{}
-
 public class NapCatSocketManager
 {
     public static readonly string socketListConfigPath = Path.Combine(AppContext.BaseDirectory, "appconfigs", "sockets.json");
@@ -27,7 +24,7 @@ public class NapCatSocketManager
             lock (configtouringLock) {
                 try {
                     configValue = File.ReadAllText(socketListConfigPath);
-                } catch{}
+                } catch { }
             }
             return JsonSerializer.Deserialize<List<SocketEntity>>(configValue ?? "[]") ?? [];
         }
@@ -36,13 +33,25 @@ public class NapCatSocketManager
             var jsonv = JsonSerializer.Serialize(value.ToHashSet());
             lock (configtouringLock) {
                 try {
-                    File.WriteAllText(socketListConfigPath ,jsonv ?? "[]");
-                } catch{}
+                    File.WriteAllText(socketListConfigPath, jsonv ?? "[]");
+                } catch { }
             }
         }
     }
+
     private readonly SocketRegionService region;
     private readonly SystemLogger logger;
+
+    /// <summary>
+    /// key: socket 名称, value: CancellationTokenSource
+    /// </summary>
+    private readonly ConcurrentDictionary<string, CancellationTokenSource> socketCtsMap = [];
+
+    /// <summary>
+    /// key: socket 名称, value: 运行时状态信息 (Status, RetryCount)
+    /// </summary>
+    private readonly ConcurrentDictionary<string, (ConnectionStatus Status, int RetryCount)> runtimeStatus = [];
+
     public NapCatSocketManager(SocketRegionService service, SystemLogger log)
     {
         region = service;
@@ -60,26 +69,39 @@ public class NapCatSocketManager
             try {
                 logger.Info($"启用Socket: {item.Name} {item.Uri}");
                 Enable(item);
-            } catch{}
+            } catch { }
         }
     }
+
     /// <summary>
     /// key是socket的名称
     /// </summary>
     internal readonly ConcurrentDictionary<string, NapCatHttpSocket> NapCatSockets = [];
+
     /// <summary>
-    /// 关闭socket
+    /// 关闭socket（取消后台任务，停止连接）
     /// </summary>
     public void Disable(string name)
     {
-        if(NapCatSockets.TryRemove(name, out var s)) {
+        // 取消后台任务
+        if (socketCtsMap.TryRemove(name, out var cts)) {
+            cts.Cancel();
+            cts.Dispose();
+        }
+        // 移除 socket 实例
+        if (NapCatSockets.TryRemove(name, out var s)) {
             s.Stop();
         }
+        // 清理运行时状态
+        runtimeStatus.TryRemove(name, out _);
+
         var c = Configs;
         var entity = c.FirstOrDefault(f => f.Name == name);
-        if(entity != null) {
+        if (entity != null) {
             logger.Info($"禁用Socket: {entity.Name} {entity.Uri}");
             entity.IsEnable = false;
+            entity.Status = ConnectionStatus.Disconnected;
+            entity.RetryCount = 0;
             Configs = c;
         }
     }
@@ -90,7 +112,7 @@ public class NapCatSocketManager
     public void Close(NapCatHttpSocket socket)
     {
         foreach (var kv in NapCatSockets.ToArray()) {
-            if(kv.Value == socket) {
+            if (kv.Value == socket) {
                 Disable(kv.Key);
             }
         }
@@ -104,30 +126,41 @@ public class NapCatSocketManager
             Password = entity.Password
         };
         NapCatSockets.TryAdd(entity.Name, socket);
+
+        // 创建可取消的 CancellationTokenSource
+        var cts = new CancellationTokenSource();
+        socketCtsMap.TryAdd(entity.Name, cts);
+
+        // 初始化运行时状态
+        runtimeStatus[entity.Name] = (ConnectionStatus.Connecting, 0);
+
         logger.Info($"启用Socket: {entity.Name} {entity.Uri}");
-        region.Enqueue(new QueueSocketTask(
-            socket,
-            connectionErrorCall: ErrorCallRemove,
-            reciveErrorCall: ErrorCallReConnection)); // 这里可以添加错误回调
+        region.StartSocket(entity.Name, socket, cts, OnStatusChanged);
+
         entity.IsEnable = true;
+        entity.Status = ConnectionStatus.Connecting;
+        entity.RetryCount = 0;
         Configs = Configs;
     }
 
     public void Enable(string name, string uri, string? password)
     {
-        var entity  =new SocketEntity()
+        var entity = new SocketEntity()
         {
-             Name = name,
-             Uri = uri,
-             Password = password ?? ""
+            Name = name,
+            Uri = uri,
+            Password = password ?? ""
         };
         Enable(entity);
     }
 
     public void Enable(string name)
     {
-        var entity = Configs.FirstOrDefault(f => f.Name == name);
-        if(entity != null) {
+        var c = Configs;
+        var entity = c.FirstOrDefault(f => f.Name == name);
+        if (entity != null) {
+            entity.IsEnable = true;
+            Configs = c; // 先持久化 IsEnable=true 到文件，再启动连接
             Enable(entity);
         }
     }
@@ -137,8 +170,8 @@ public class NapCatSocketManager
     /// </summary>
     public void Delete(string name)
     {
-        if(NapCatSockets.TryGetValue(name, out var value)) {
-            Close(value);
+        if (NapCatSockets.ContainsKey(name)) {
+            Disable(name);
         }
         DeleteConfig(name);
     }
@@ -161,14 +194,14 @@ public class NapCatSocketManager
         try {
             var entity = new SocketEntity()
             {
-                 Name = name,
-                 Uri = uri.ToString(),
-                 IsEnable = true,
-                 Password = password ?? ""
+                Name = name,
+                Uri = uri.ToString(),
+                IsEnable = true,
+                Password = password ?? ""
             };
             Enable(entity);
             AddConfig(entity);
-        } catch(Exception e) {
+        } catch (Exception e) {
             exception = e;
             Disable(name);
             return false;
@@ -193,27 +226,48 @@ public class NapCatSocketManager
     {
         var c = Configs;
         int count = c.RemoveAll(f => f.Name == name);
-        if(count == 0) return;
+        if (count == 0) return;
         Configs = c;
         logger.Info($"删除Socket: {name}");
     }
 
-    private Task ErrorCallReConnection(SocketRegionService region, NapCatHttpSocket socket, Exception e)
+    /// <summary>
+    /// 状态变更回调：更新运行时状态和 SocketEntity
+    /// </summary>
+    private void OnStatusChanged(string name, ConnectionStatus status, int retryCount)
     {
-        region.ReConnection(new QueueSocketTask(socket, ErrorCallRemove, ErrorCallRemove));
-        logger.Info($"重连Socket: {socket.Uri}");
-        return Task.CompletedTask;
-    }
+        runtimeStatus[name] = (status, retryCount);
 
-    private Task ErrorCallRemove(SocketRegionService region, NapCatHttpSocket socket, Exception e)
-    {
-        Close(socket);
-        logger.Error($"Socket错误: {socket.Uri} {e.Message} \r\n {e.StackTrace}");
-        return Task.CompletedTask;
+        // 同步更新到 Configs 中的 SocketEntity
+        var c = Configs;
+        var entity = c.FirstOrDefault(f => f.Name == name);
+        if (entity != null) {
+            entity.Status = status;
+            entity.RetryCount = retryCount;
+            Configs = c;
+        }
     }
 
     /// <summary>
     /// 全部socket集合 包括未启用的
     /// </summary>
-    public List<SocketEntity> Sockets => Configs;
+    public List<SocketEntity> Sockets
+    {
+        get
+        {
+            var configs = Configs;
+            // 同步运行时状态到返回结果
+            foreach (var entity in configs) {
+                if (runtimeStatus.TryGetValue(entity.Name, out var rt)) {
+                    entity.Status = rt.Status;
+                    entity.RetryCount = rt.RetryCount;
+                } else {
+                    // 没有运行时状态 = 已禁用/已停止
+                    entity.Status = entity.IsEnable ? ConnectionStatus.Connecting : ConnectionStatus.Disconnected;
+                    entity.RetryCount = 0;
+                }
+            }
+            return configs;
+        }
+    }
 }
