@@ -12,7 +12,7 @@ namespace NapCatSharp.Mod.Core;
 /// <see cref="SocketRegionService"/>的队列中 <br/>
 /// 2. <see cref="NapCatSocketManager.Disable(string)"/> 会同时释放socket链接
 /// </summary>
-file class Note{}
+//file class Note{}
 
 public class NapCatSocketManager
 {
@@ -109,6 +109,8 @@ public class NapCatSocketManager
             socket,
             connectionErrorCall: ErrorCallRemove,
             reciveErrorCall: ErrorCallReConnection)); // 这里可以添加错误回调
+        entity.IsEnable = true;
+        Configs = Configs;
     }
 
     public void Enable(string name, string uri, string? password)

@@ -1,7 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc.Controllers;
-using Microsoft.IdentityModel.JsonWebTokens;
+﻿using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
-using System.Reflection;
 using System.Text;
 
 namespace NapCatSharp.Mod.Services;
@@ -10,7 +8,7 @@ namespace NapCatSharp.Mod.Services;
 public class JWTAttribute : Attribute
 {
     private readonly static JsonWebTokenHandler handler = new JsonWebTokenHandler();
-    public async Task<bool> OnAuthorizationAsync(HttpContext/*AuthorizationFilterContext*/ context)
+    public async Task<bool> OnAuthorizationAsync(HttpContext context)
     {
 #if DEBUG
         //return true;
@@ -21,9 +19,6 @@ public class JWTAttribute : Attribute
         var le = context.GetEndpoint();
 #pragma warning restore CS0162 // 检测到无法访问的代码
         if (actionDesc == null) return true;
-        //if (actionDesc?.MethodInfo.GetCustomAttribute<JWTAttribute>() == null) {
-        //    return true;
-        //}
 
         var jwtStr = context.Request.Headers.Authorization.ToString();
         if(jwtStr.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase)) {
@@ -33,10 +28,8 @@ public class JWTAttribute : Attribute
         var configuration = context.RequestServices.GetService<IConfiguration>();
         var skey = configuration!.GetValue("jwtKey", string.Empty);
         if (!await VerifyToken(jwtStr, skey)) {
-            //context.Request = new NotFoundResult();
             return false;
         }
-        //context.User.AddIdentity(new ClaimsIdentity([new Claim("")]))
         return true;
     }
 
@@ -64,7 +57,7 @@ public class JWTAttribute : Attribute
         };
         try {
             return (await handler.ValidateTokenAsync(jwtStr, parameters)).IsValid;
-        } catch /*(Exception e)*/ {
+        } catch {
             return false;
         }
     }

@@ -5,9 +5,6 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
-  <Target Name="BeforeBuild">
-    <Copy SourceFiles="bin\Debug\net10.0\TestMod.dll" DestinationFiles="..\NapCatSharp.Mod\bin\Debug\net10.0\Mods\TestMod\TestMod.dll"></Copy>
-  </Target>
   <Target Name="CopyToMods" AfterTargets="Build">
       <PropertyGroup>
           <!-- 解决方案\ -->

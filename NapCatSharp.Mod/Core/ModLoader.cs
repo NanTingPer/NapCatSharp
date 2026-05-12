@@ -233,3 +233,11 @@ public static class ModLoader
         return fileInfo.Length;
     }
 }
+
+/// <summary>
+/// <see cref="ModLoader"/>
+/// 程序在启动时，会调用<see cref="ModLoader.LoadMods"/>                <br/>
+/// - 读取(程序根目录下/Mods/enables.json)并根据数组加载Mod             <br/>
+/// - Mod被实例被存储在<see cref="ModContext"/>以便统一卸载             <br/>
+/// </summary>
+file static class Note{ }
